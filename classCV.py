@@ -1,6 +1,6 @@
 """
 cv_models.py
-Modèles Pydantic pour une API FastAPI — compatibles Pylance.
+Modèles Pydantic pour une API FastAPI
 """
 
 from __future__ import annotations
