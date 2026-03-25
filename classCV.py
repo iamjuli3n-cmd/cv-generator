@@ -1,59 +1,55 @@
 """
-Ce document regroupe toutes les classes que nous utiliserons dans notre CV-generator
+cv_models.py
+Modèles Pydantic pour une API FastAPI — compatibles Pylance.
 """
 
-from dataclasses import dataclass, field
+from __future__ import annotations
+
 from typing import Optional
+from pydantic import BaseModel, EmailStr, HttpUrl, Field
 
 
-@dataclass
-class InformationsPersonnelles:
+class InformationsPersonnelles(BaseModel):
     nom: str
     prenom: str
     adresse: str
     telephone: str
-    email: str
-    portfolio: Optional[str] = None
-    linkedin: Optional[str] = None
-    github: Optional[str] = None
+    email: EmailStr
+    portfolio: Optional[HttpUrl] = None
+    linkedin: Optional[HttpUrl] = None
+    github: Optional[HttpUrl] = None
     permis_conduire: Optional[bool] = None
     nationalite: Optional[str] = None
 
 
-@dataclass
-class TitreProfil:
+class TitreProfil(BaseModel):
     titre: str
 
 
-@dataclass
-class Resume:
-    texte: str
+class Resume(BaseModel):
+    texte: str = Field(..., min_length=1, max_length=1000)
 
 
-@dataclass
-class CompetencesPrincipales:
-    competences: list[str] = field(default_factory=list)
+class CompetencesPrincipales(BaseModel):
+    competences: list[str] = Field(default_factory=list)
 
 
-@dataclass
-class CompetencesTechniques:
-    langages: list[str] = field(default_factory=list)
-    logiciels: list[str] = field(default_factory=list)
-    technologies: list[str] = field(default_factory=list)
+class CompetencesTechniques(BaseModel):
+    langages: list[str] = Field(default_factory=list)
+    logiciels: list[str] = Field(default_factory=list)
+    technologies: list[str] = Field(default_factory=list)
 
 
-@dataclass
-class ExperienceProfessionnelle:
+class ExperienceProfessionnelle(BaseModel):
     poste: str
     entreprise: str
     ville: str
     date_debut: str
     date_fin: str
-    missions: list[str] = field(default_factory=list)
+    missions: list[str] = Field(default_factory=list)
 
 
-@dataclass
-class Formation:
+class Formation(BaseModel):
     diplome: str
     etablissement: str
     ville: str
@@ -63,95 +59,83 @@ class Formation:
     projet_important: Optional[str] = None
 
 
-@dataclass
-class Projet:
+class Projet(BaseModel):
     nom: str
     description: str
-    technologies: list[str] = field(default_factory=list)
+    technologies: list[str] = Field(default_factory=list)
     resultat_ou_lien: Optional[str] = None
 
 
-@dataclass
-class Certification:
+class Certification(BaseModel):
     titre: str
     organisation: str
     date: str
 
 
-@dataclass
-class CompetenceLinguistique:
+class CompetenceLinguistique(BaseModel):
     langue: str
     niveau: str
 
 
-@dataclass
-class CompetencesInformatiques:
-    outils: list[str] = field(default_factory=list)
+class CompetencesInformatiques(BaseModel):
+    outils: list[str] = Field(default_factory=list)
 
 
-@dataclass
-class SoftSkills:
-    competences: list[str] = field(default_factory=list)
+class SoftSkills(BaseModel):
+    competences: list[str] = Field(default_factory=list)
 
 
-@dataclass
-class Activite:
+class Activite(BaseModel):
     organisation: str
     role: str
-    realisations: list[str] = field(default_factory=list)
+    realisations: list[str] = Field(default_factory=list)
 
 
-@dataclass
-class Publication:
+class Publication(BaseModel):
     titre: str
     journal_ou_conference: str
     date: str
 
 
-@dataclass
-class Conference:
+class Conference(BaseModel):
     nom: str
     sujet: str
     annee: str
 
 
-@dataclass
-class Prix:
+class Prix(BaseModel):
     nom: str
     organisation: str
     annee: str
 
 
-@dataclass
-class CentresInteret:
-    interets: list[str] = field(default_factory=list)
+class CentresInteret(BaseModel):
+    interets: list[str] = Field(default_factory=list)
 
 
-@dataclass
-class References:
+class References(BaseModel):
     disponibles_sur_demande: bool = True
-    contacts: list[str] = field(default_factory=list)
+    contacts: list[str] = Field(default_factory=list)
 
 
-@dataclass
-class CV:
+class CV(BaseModel):
     informations_personnelles: InformationsPersonnelles
     titre_profil: TitreProfil
     resume: Resume
     competences_principales: CompetencesPrincipales
     competences_techniques: CompetencesTechniques
-    experiences: list[ExperienceProfessionnelle] = field(default_factory=list)
-    formations: list[Formation] = field(default_factory=list)
-    projets: list[Projet] = field(default_factory=list)
-    certifications: list[Certification] = field(default_factory=list)
-    competences_linguistiques: list[CompetenceLinguistique] = field(
+    experiences: list[ExperienceProfessionnelle] = Field(default_factory=list)
+    formations: list[Formation] = Field(default_factory=list)
+    projets: list[Projet] = Field(default_factory=list)
+    certifications: list[Certification] = Field(default_factory=list)
+    competences_linguistiques: list[CompetenceLinguistique] = Field(
         default_factory=list
     )
     competences_informatiques: Optional[CompetencesInformatiques] = None
     soft_skills: Optional[SoftSkills] = None
-    activites: list[Activite] = field(default_factory=list)
-    publications: list[Publication] = field(default_factory=list)
-    conferences: list[Conference] = field(default_factory=list)
-    prix: list[Prix] = field(default_factory=list)
+    activites: list[Activite] = Field(default_factory=list)
+    publications: list[Publication] = Field(default_factory=list)
+    conferences: list[Conference] = Field(default_factory=list)
+    prix: list[Prix] = Field(default_factory=list)
     centres_interet: Optional[CentresInteret] = None
     references: Optional[References] = None
