@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>CV — {{ cv.personnal_information.first_name }} {{ cv.personnal_information.name }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #222; }
+    h1 { font-size: 28px; margin-bottom: 4px; }
+    h2 { font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-top: 30px; }
+    p, li { font-size: 14px; line-height: 1.6; }
+    ul { padding-left: 20px; }
+    .subtitle { color: #555; font-size: 15px; margin-bottom: 6px; }
+    .meta { color: #888; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <h1>{{ cv.personnal_information.first_name }} {{ cv.personnal_information.name }}</h1>
+  <p class="subtitle">{{ cv.titre_profil }}</p>
+  <p class="meta">
+    {{ cv.personnal_information.email }} |
+    {{ cv.personnal_information.phone_number }} |
+    {{ cv.personnal_information.address }}
+  </p>
+
+  {% if cv.personnal_information.linkedin %}<p class="meta">LinkedIn : {{ cv.personnal_information.linkedin }}</p>{% endif %}
+  {% if cv.personnal_information.github %}<p class="meta">GitHub : {{ cv.personnal_information.github }}</p>{% endif %}
+  {% if cv.personnal_information.portfoliio %}<p class="meta">Portfolio : {{ cv.personnal_information.portfoliio }}</p>{% endif %}
+
+  <h2>Profil</h2>
+  <p>{{ cv.resume }}</p>
+
+  {% if cv.experiences %}
+  <h2>Expériences</h2>
+  {% for exp in cv.experiences %}
+    <p><strong>{{ exp.job }}</strong> — {{ exp.company }}, {{ exp.city }}<br>
+    <span class="meta">{{ exp.start_date }} – {{ exp.end_date if exp.end_date else "Présent" }}</span></p>
+    <ul>
+      {% for mission in exp.missions %}
+      <li>{{ mission.description }}</li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+  {% endif %}
+
+  {% if cv.formations %}
+  <h2>Formation</h2>
+  {% for f in cv.formations %}
+    <p><strong>{{ f.diploma }}</strong> — {{ f.school }}, {{ f.city }}<br>
+    <span class="meta">{{ f.date }}</span></p>
+  {% endfor %}
+  {% endif %}
+
+  {% if cv.projects %}
+  <h2>Projets</h2>
+  {% for project in cv.projects %}
+    <p><strong>{{ project.name }}</strong> — {{ project.description }}<br>
+    <span class="meta">{{ project.technologies | map(attribute='name') | join(', ') }}</span><br>
+    {% if project.link %}<a href="{{ project.link }}">{{ project.link }}</a>{% endif %}</p>
+  {% endfor %}
+  {% endif %}
+
+  {% if cv.languages %}
+  <h2>Langues</h2>
+  <ul>
+    {% for lang in cv.languages %}
+    <li>{{ lang.language }} : {{ lang.level }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if cv.activities %}
+  <h2>Activités</h2>
+  {% for activity in cv.activities %}
+    <p><strong>{{ activity.organisation }}</strong> — {{ activity.role }}</p>
+    <ul>
+      {% for mission in activity.activity_missions %}
+      <li>{{ mission.description }}</li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+  {% endif %}
+
+</body>
+</html>
