@@ -146,6 +146,7 @@ class CV(Base):
     date_creation = Column(Date, nullable=True)
     date_modification = Column(Date, nullable=True)
 
+    # Les relationship(...) ne créent pas de colonnes dans la BDD — ils servent uniquement à naviguer entre les objets Python :
     personnal_information = relationship(
         "PersonnalInformation",
         back_populates="cv",
