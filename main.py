@@ -245,6 +245,24 @@ def update_cv(id_cv: int, cv_data: classCV.CV, db: Session = Depends(get_db)):
     db_cv.date_modification = cv_data.date_modification
 
     # Suppression des anciennes données liées
+    # On supprime les enfants avant les parents pour éviter les erreurs de contrainte
+
+    # Missions des expériences
+    for exp in db.query(models.Experience).filter_by(id_cv=id_cv).all():
+        db.query(models.Mission).filter_by(id_experience=exp.id_experience).delete()
+
+    # Liaisons projet <-> technologie + missions des activités
+    for project in db.query(models.Project).filter_by(id_cv=id_cv).all():
+        db.query(models.ProjectTechnology).filter_by(
+            id_project=project.id_project
+        ).delete()
+
+    for activity in db.query(models.Activity).filter_by(id_cv=id_cv).all():
+        db.query(models.ActivityMission).filter_by(
+            id_activity=activity.id_activity
+        ).delete()
+
+    # Suppression des parents
     db.query(models.PersonnalInformation).filter_by(id_cv=id_cv).delete()
     db.query(models.Experience).filter_by(id_cv=id_cv).delete()
     db.query(models.Formation).filter_by(id_cv=id_cv).delete()
@@ -252,7 +270,6 @@ def update_cv(id_cv: int, cv_data: classCV.CV, db: Session = Depends(get_db)):
     db.query(models.Language).filter_by(id_cv=id_cv).delete()
     db.query(models.Activity).filter_by(id_cv=id_cv).delete()
     db.flush()
-
     # Recréation avec les nouvelles données
     info = cv_data.personnal_information
     db.add(
