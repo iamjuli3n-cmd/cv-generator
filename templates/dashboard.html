@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Generator — Tableau de bord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #f8f5ef;
+            --surface:      #ffffff;
+            --navy:         #1c2533;
+            --accent:       #2d6a4f;
+            --accent-light: #52b788;
+            --accent-hover: #40916c;
+            --text:         #1c2533;
+            --text-muted:   #7a8899;
+            --border:       #e0d9cf;
+            --white:        #ffffff;
+            --red:          #dc2626;
+            --red-bg:       #fef2f2;
+            --red-border:   #fecaca;
+            --row-hover:    #faf8f4;
+            --radius:       10px;
+            --header-h:     66px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ─── HEADER ─────────────────────────────────────── */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: var(--header-h);
+            background: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-shadow: 0 1px 0 rgba(0,0,0,.12), 0 4px 16px rgba(0,0,0,.08);
+        }
+
+        /* Header left */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .brand-mark {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 34px; height: 34px;
+            background: var(--accent);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fraunces', serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,.5);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .header-sep {
+            width: 1px;
+            height: 22px;
+            background: rgba(255,255,255,.12);
+        }
+
+        .btn-new-cv {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 17px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, box-shadow .2s;
+            white-space: nowrap;
+        }
+
+        .btn-new-cv:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 3px 10px rgba(45,106,79,.3);
+        }
+
+        .btn-new-cv svg { width: 15px; height: 15px; }
+
+        /* Header right */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .user-avatar {
+            width: 32px; height: 32px;
+            background: rgba(82,183,136,.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .user-avatar svg {
+            width: 17px; height: 17px;
+            color: var(--accent-light);
+        }
+
+        .user-email {
+            font-size: 13.5px;
+            color: rgba(255,255,255,.7);
+            max-width: 210px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            background: rgba(255,255,255,.07);
+            color: rgba(255,255,255,.6);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .2s, color .2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255,255,255,.13);
+            color: white;
+        }
+
+        .btn-logout svg { width: 15px; height: 15px; }
+
+        /* ─── MAIN ───────────────────────────────────────── */
+        .main {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 52px 28px 100px;
+        }
+
+        /* Subtle dot texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(rgba(28,37,51,.06) 1px, transparent 1px);
+            background-size: 22px 22px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .main { position: relative; z-index: 1; }
+
+        /* Section header */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            animation: fadeUp .5s ease both;
+        }
+
+        .section-title {
+            font-family: 'Fraunces', serif;
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--text);
+        }
+
+        .count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 26px;
+            height: 26px;
+            padding: 0 7px;
+            background: var(--navy);
+            color: white;
+            border-radius: 999px;
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        /* ─── CV LIST ─────────────────────────────────────── */
+        .cv-list {
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+        }
+
+        .cv-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+        }
+
+        .cv-row:last-child { border-bottom: none; }
+        .cv-row:hover { background: var(--row-hover); }
+
+        .cv-row-icon {
+            width: 38px; height: 38px;
+            background: #f0ede6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--accent);
+        }
+
+        .cv-row-icon svg { width: 19px; height: 19px; }
+
+        .cv-row-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cv-title {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+
+        .cv-person {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .cv-row-date {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 140px;
+            text-align: right;
+        }
+
+        .cv-row-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-edit,
+        .btn-delete {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 13px;
+            border-radius: 7px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: background .18s, color .18s;
+        }
+
+        .btn-edit {
+            background: #efecea;
+            color: var(--text);
+        }
+
+        .btn-edit:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-delete {
+            background: var(--red-bg);
+            color: var(--red);
+        }
+
+        .btn-delete:hover {
+            background: var(--red);
+            color: white;
+        }
+
+        .btn-edit svg,
+        .btn-delete svg { width: 14px; height: 14px; }
+
+        /* ─── SKELETON ───────────────────────────────────── */
+        .skeleton-list {
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+        }
+
+        .skeleton-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .skeleton-row:last-child { border-bottom: none; }
+
+        .sk {
+            background: linear-gradient(90deg, #ede9e1 25%, #e5e0d7 50%, #ede9e1 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.6s infinite;
+            border-radius: 4px;
+        }
+
+        .sk-icon   { width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0; }
+        .sk-wrap   { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .sk-line   { height: 13px; }
+        .sk-wide   { width: 48%; }
+        .sk-narrow { width: 28%; }
+        .sk-date   { width: 110px; height: 13px; flex-shrink: 0; }
+        .sk-btn    { height: 34px; border-radius: 7px; flex-shrink: 0; }
+        .sk-btn-a  { width: 84px; }
+        .sk-btn-b  { width: 96px; }
+
+        @keyframes shimmer {
+            0%   { background-position:  200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ─── EMPTY STATE ─────────────────────────────────── */
+        .empty-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 72px 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+        }
+
+        .empty-state.show { display: flex; }
+
+        .empty-icon-wrap {
+            width: 64px; height: 64px;
+            background: #f0ede6;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 22px;
+            color: var(--accent);
+        }
+
+        .empty-icon-wrap svg { width: 30px; height: 30px; }
+
+        .empty-title {
+            font-family: 'Fraunces', serif;
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .empty-sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            max-width: 280px;
+            line-height: 1.65;
+        }
+
+        .btn-create-first {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 22px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, box-shadow .2s;
+        }
+
+        .btn-create-first:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 5px 14px rgba(45,106,79,.22);
+        }
+
+        /* ─── DELETE MODAL ───────────────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal-box {
+            background: white;
+            border-radius: 14px;
+            padding: 32px 36px;
+            width: 100%;
+            max-width: 420px;
+            margin: 0 20px;
+            box-shadow: 0 24px 64px rgba(0,0,0,.18);
+            animation: popIn .22s ease both;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(.95) translateY(-8px); }
+            to   { opacity: 1; transform: scale(1)  translateY(0); }
+        }
+
+        .modal-icon {
+            width: 48px; height: 48px;
+            background: var(--red-bg);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: var(--red);
+        }
+
+        .modal-icon svg { width: 22px; height: 22px; }
+
+        .modal-title {
+            font-family: 'Fraunces', serif;
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 28px;
+        }
+
+        .modal-body strong { color: var(--text); font-weight: 600; }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            padding: 10px 20px;
+            background: #f0ede6;
+            color: var(--text);
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .btn-cancel:hover { background: #e8e4dc; }
+
+        .btn-confirm-delete {
+            padding: 10px 20px;
+            background: var(--red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .btn-confirm-delete:hover { background: #b91c1c; }
+        .btn-confirm-delete:disabled { opacity: .6; cursor: not-allowed; }
+
+        /* ─── ANIMATIONS ─────────────────────────────────── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .cv-row {
+            animation: fadeUp .3s ease both;
+        }
+
+        /* ─── RESPONSIVE ─────────────────────────────────── */
+        @media (max-width: 640px) {
+            .header { padding: 0 16px; gap: 8px; }
+            .brand-name, .header-sep, .user-email { display: none; }
+            .main { padding: 28px 16px 60px; }
+            .cv-row { padding: 14px 16px; flex-wrap: wrap; }
+            .cv-row-date { display: none; }
+            .cv-row-actions { width: 100%; justify-content: flex-end; margin-top: 8px; }
+            .btn-edit span, .btn-delete span { display: none; }
+            .btn-edit, .btn-delete { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+        <div class="header-left">
+            <a href="#" class="brand-mark">
+                <div class="brand-icon">CV</div>
+                <span class="brand-name">CV Generator</span>
+            </a>
+            <div class="header-sep"></div>
+            <button class="btn-new-cv" onclick="handleNewCV()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5"  y1="12" x2="19" y2="12"/>
+                </svg>
+                Nouveau CV
+            </button>
+        </div>
+
+        <div class="header-right">
+            <div class="user-chip">
+                <div class="user-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <span class="user-email" id="userEmail">—</span>
+            </div>
+
+            <button class="btn-logout" onclick="logout()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Déconnexion
+            </button>
+        </div>
+    </header>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="main">
+
+        <div class="section-header">
+            <h1 class="section-title">Mes CV</h1>
+            <span class="count-badge" id="cvCount">0</span>
+        </div>
+
+        <!-- Loading skeleton (visible par défaut) -->
+        <div class="skeleton-list" id="skeletonList">
+            <div class="skeleton-row">
+                <div class="sk sk-icon"></div>
+                <div class="sk-wrap">
+                    <div class="sk sk-line sk-wide"></div>
+                    <div class="sk sk-line sk-narrow"></div>
+                </div>
+                <div class="sk sk-line sk-date"></div>
+                <div class="sk sk-btn sk-btn-a"></div>
+                <div class="sk sk-btn sk-btn-b"></div>
+            </div>
+            <div class="skeleton-row">
+                <div class="sk sk-icon"></div>
+                <div class="sk-wrap">
+                    <div class="sk sk-line" style="width:38%"></div>
+                    <div class="sk sk-line" style="width:22%"></div>
+                </div>
+                <div class="sk sk-line sk-date"></div>
+                <div class="sk sk-btn sk-btn-a"></div>
+                <div class="sk sk-btn sk-btn-b"></div>
+            </div>
+            <div class="skeleton-row">
+                <div class="sk sk-icon"></div>
+                <div class="sk-wrap">
+                    <div class="sk sk-line" style="width:52%"></div>
+                    <div class="sk sk-line" style="width:32%"></div>
+                </div>
+                <div class="sk sk-line sk-date"></div>
+                <div class="sk sk-btn sk-btn-a"></div>
+                <div class="sk sk-btn sk-btn-b"></div>
+            </div>
+        </div>
+
+        <!-- État vide -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+            </div>
+            <p class="empty-title">Aucun CV pour l'instant</p>
+            <p class="empty-sub">Créez votre premier CV et donnez un coup de boost à votre candidature.</p>
+            <button class="btn-create-first" onclick="handleNewCV()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5"  y1="12" x2="19" y2="12"/>
+                </svg>
+                Créer mon premier CV
+            </button>
+        </div>
+
+        <!-- Liste des CVs (injectée par JS) -->
+        <div class="cv-list" id="cvList" style="display:none;"></div>
+
+    </main>
+
+    <!-- ── MODAL SUPPRESSION ── -->
+    <div class="modal-overlay" id="deleteModal" onclick="onOverlayClick(event)">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="modal-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+            </div>
+            <h2 class="modal-title" id="modalTitle">Supprimer le CV</h2>
+            <p class="modal-body">
+                Êtes-vous sûr de vouloir supprimer <strong id="deleteLabel">ce CV</strong> ?
+                Cette action est définitive et irréversible.
+            </p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="cancelDelete()">Annuler</button>
+                <button class="btn-confirm-delete" id="btnConfirm" onclick="executeDelete()">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ─── État ─────────────────────────────────────────── */
+        let token          = localStorage.getItem('cv_token');
+        let cvs            = [];
+        let pendingDeleteId = null;
+
+        /* ─── Init ─────────────────────────────────────────── */
+        async function init() {
+            if (!token) { redirect(); return; }
+
+            try {
+                const userRes = await apiFetch('/users/me');
+                if (!userRes) return;
+
+                const user = await userRes.json();
+                document.getElementById('userEmail').textContent = user.email;
+
+                await loadCVs();
+            } catch (_) {
+                redirect();
+            }
+        }
+
+        /* ─── Helper fetch avec auth ────────────────────────── */
+        async function apiFetch(path, opts = {}) {
+            const res = await fetch(path, {
+                ...opts,
+                headers: { 'Authorization': `Bearer ${token}`, ...(opts.headers || {}) }
+            });
+            if (res.status === 401) { logout(); return null; }
+            return res;
+        }
+
+        /* ─── Chargement des CVs ─────────────────────────────── */
+        async function loadCVs() {
+            show('skeletonList');
+            hide('cvList');
+            document.getElementById('emptyState').classList.remove('show');
+
+            const res = await apiFetch('/cv');
+            if (!res) return;
+
+            cvs = await res.json();
+            hide('skeletonList');
+            renderList();
+        }
+
+        /* ─── Rendu de la liste ──────────────────────────────── */
+        function renderList() {
+            const list    = document.getElementById('cvList');
+            const empty   = document.getElementById('emptyState');
+            const badge   = document.getElementById('cvCount');
+
+            badge.textContent = cvs.length;
+
+            if (cvs.length === 0) {
+                list.style.display = 'none';
+                empty.classList.add('show');
+                return;
+            }
+
+            empty.classList.remove('show');
+            list.style.display = 'flex';
+            list.style.flexDirection = 'column';
+
+            list.innerHTML = cvs.map((cv, i) => {
+                const info     = cv.personnal_information || {};
+                const person   = [info.first_name, info.name].filter(Boolean).join(' ');
+                const dateStr  = fmtDate(cv.date_modification || cv.date_creation);
+                const title    = cv.titre_profil || 'CV sans titre';
+
+                return `
+                <div class="cv-row" id="cv-${cv.id_cv}" style="animation-delay:${i * 45}ms">
+
+                    <!-- Icône document -->
+                    <div class="cv-row-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                    </div>
+
+                    <!-- Infos -->
+                    <div class="cv-row-info">
+                        <span class="cv-title">${esc(title)}</span>
+                        ${person ? `<span class="cv-person">${esc(person)}</span>` : ''}
+                    </div>
+
+                    <!-- Date -->
+                    <div class="cv-row-date">Modifié le ${dateStr}</div>
+
+                    <!-- Actions -->
+                    <div class="cv-row-actions">
+                        <button class="btn-edit"
+                                data-id="${cv.id_cv}"
+                                onclick="editCV(this)"
+                                title="Modifier ce CV">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            <span>Modifier</span>
+                        </button>
+
+                        <button class="btn-delete"
+                                data-id="${cv.id_cv}"
+                                data-title="${esc(title)}"
+                                onclick="confirmDelete(this)"
+                                title="Supprimer ce CV">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                            </svg>
+                            <span>Supprimer</span>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        /* ─── Actions ────────────────────────────────────────── */
+        function editCV(btn) {
+            /* Redirige vers la prévisualisation HTML du CV */
+            window.location.href = `/cv/${btn.dataset.id}/html`;
+        }
+
+        function handleNewCV() {
+            window.location.href = '/create';
+        }
+
+        /* ─── Suppression ────────────────────────────────────── */
+        function confirmDelete(btn) {
+            pendingDeleteId = parseInt(btn.dataset.id, 10);
+            document.getElementById('deleteLabel').textContent = btn.dataset.title;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function cancelDelete() {
+            pendingDeleteId = null;
+            document.getElementById('deleteModal').classList.remove('show');
+        }
+
+        function onOverlayClick(e) {
+            /* Fermer en cliquant sur le fond */
+            if (e.target === document.getElementById('deleteModal')) cancelDelete();
+        }
+
+        async function executeDelete() {
+            if (!pendingDeleteId) return;
+            const id = pendingDeleteId;
+
+            const confirmBtn = document.getElementById('btnConfirm');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Suppression…';
+
+            try {
+                const res = await apiFetch(`/cv/${id}`, { method: 'DELETE' });
+
+                if (res && res.ok) {
+                    /* Animation de sortie */
+                    const row = document.getElementById(`cv-${id}`);
+                    if (row) {
+                        row.style.transition = 'opacity .22s, transform .22s';
+                        row.style.opacity    = '0';
+                        row.style.transform  = 'translateX(-10px)';
+                        setTimeout(() => {
+                            cvs = cvs.filter(cv => cv.id_cv !== id);
+                            renderList();
+                        }, 240);
+                    }
+                } else if (res) {
+                    const data = await res.json().catch(() => ({}));
+                    alert(data.detail || 'Erreur lors de la suppression.');
+                }
+            } catch (_) {
+                alert('Erreur réseau. Réessayez.');
+            } finally {
+                cancelDelete();
+                confirmBtn.disabled    = false;
+                confirmBtn.textContent = 'Supprimer';
+            }
+        }
+
+        /* ─── Auth / nav ─────────────────────────────────────── */
+        function logout() {
+            localStorage.removeItem('cv_token');
+            window.location.href = '/';
+        }
+
+        function redirect() {
+            window.location.href = '/';
+        }
+
+        /* ─── Helpers ────────────────────────────────────────── */
+        function show(id) { document.getElementById(id).style.display = 'flex'; }
+        function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+        function fmtDate(str) {
+            if (!str) return '—';
+            try {
+                return new Date(str).toLocaleDateString('fr-FR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                });
+            } catch (_) { return '—'; }
+        }
+
+        function esc(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        /* ─── Raccourci clavier ──────────────────────────────── */
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') cancelDelete();
+        });
+
+        /* ─── Démarrage ──────────────────────────────────────── */
+        init();
+    </script>
+</body>
+</html>

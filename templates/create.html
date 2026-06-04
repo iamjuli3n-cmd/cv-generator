@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Generator — Nouveau CV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #f8f5ef;
+            --surface:      #ffffff;
+            --surface-alt:  #faf8f4;
+            --navy:         #1c2533;
+            --accent:       #2d6a4f;
+            --accent-hover: #40916c;
+            --text:         #1c2533;
+            --text-muted:   #7a8899;
+            --border:       #e0d9cf;
+            --red:          #dc2626;
+            --red-bg:       #fef2f2;
+            --radius:       10px;
+            --header-h:     66px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Dot texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(rgba(28,37,51,.06) 1px, transparent 1px);
+            background-size: 22px 22px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ─── HEADER ─────────────────────────────────────── */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: var(--header-h);
+            background: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-shadow: 0 1px 0 rgba(0,0,0,.12), 0 4px 16px rgba(0,0,0,.08);
+        }
+
+        .brand-mark {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 34px; height: 34px;
+            background: var(--accent);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fraunces', serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .brand-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,.5);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            background: rgba(255,255,255,.07);
+            color: rgba(255,255,255,.65);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .2s, color .2s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,.13);
+            color: white;
+        }
+
+        .btn-back svg { width: 15px; height: 15px; }
+
+        /* ─── MAIN ───────────────────────────────────────── */
+        .main {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 48px 28px 100px;
+        }
+
+        .page-title {
+            font-family: 'Fraunces', serif;
+            font-size: 30px;
+            font-weight: 400;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .page-sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 36px;
+        }
+
+        /* ─── SECTION CARD ────────────────────────────────── */
+        .section-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 28px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+        }
+
+        .section-title {
+            font-family: 'Fraunces', serif;
+            font-size: 17px;
+            font-weight: 400;
+            color: var(--text);
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ─── FIELDS ─────────────────────────────────────── */
+        .field { margin-bottom: 14px; }
+        .field:last-child { margin-bottom: 0; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="url"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            background: var(--surface);
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            -webkit-appearance: none;
+        }
+
+        input::placeholder, textarea::placeholder { color: #c4bdb2; }
+
+        input:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(45,106,79,.1);
+        }
+
+        textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
+
+        /* ─── ITEM BLOCKS (exp, formation…) ─────────────── */
+        .items-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+        .item-block {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px 20px 16px;
+        }
+
+        .item-block-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .item-block-label {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .btn-remove {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            background: var(--red-bg);
+            color: var(--red);
+            border: none;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .18s, color .18s;
+        }
+
+        .btn-remove:hover { background: var(--red); color: white; }
+        .btn-remove svg { width: 13px; height: 13px; }
+
+        .btn-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 16px;
+            background: transparent;
+            color: var(--accent);
+            border: 1.5px solid var(--accent);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, color .2s;
+        }
+
+        .btn-add:hover { background: var(--accent); color: white; }
+        .btn-add svg { width: 14px; height: 14px; }
+
+        /* ─── SUBMIT ─────────────────────────────────────── */
+        .submit-area { margin-top: 8px; }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, box-shadow .2s, transform .12s;
+            letter-spacing: .01em;
+        }
+
+        .btn-submit:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 5px 18px rgba(45,106,79,.28);
+        }
+
+        .btn-submit:active { transform: scale(.99); }
+
+        .btn-submit:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 15px; height: 15px;
+            border: 2px solid rgba(255,255,255,.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin .65s linear infinite;
+            vertical-align: -3px;
+            margin-right: 8px;
+        }
+
+        /* ─── BANNERS ────────────────────────────────────── */
+        .banner {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            border-radius: var(--radius);
+            padding: 14px 18px;
+            font-size: 14px;
+            margin-top: 14px;
+        }
+
+        .banner.visible { display: flex; animation: fadeUp .25s ease both; }
+        .banner svg { flex-shrink: 0; width: 18px; height: 18px; }
+
+        .banner-success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #15803d;
+        }
+
+        .banner-error {
+            background: var(--red-bg);
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+
+        /* ─── ANIMATIONS ─────────────────────────────────── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .section-card { animation: fadeUp .4s ease both; }
+        .section-card:nth-child(2) { animation-delay:  .04s; }
+        .section-card:nth-child(3) { animation-delay:  .08s; }
+        .section-card:nth-child(4) { animation-delay: .12s; }
+        .section-card:nth-child(5) { animation-delay: .16s; }
+        .section-card:nth-child(6) { animation-delay: .20s; }
+        .section-card:nth-child(7) { animation-delay: .24s; }
+
+        /* ─── RESPONSIVE ─────────────────────────────────── */
+        @media (max-width: 600px) {
+            .header { padding: 0 16px; }
+            .brand-name { display: none; }
+            .main { padding: 28px 16px 60px; }
+            .grid-2 { grid-template-columns: 1fr; gap: 0; }
+            .section-card { padding: 20px 16px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+        <a href="/dashboard" class="brand-mark">
+            <div class="brand-icon">CV</div>
+            <span class="brand-name">CV Generator</span>
+        </a>
+        <a href="/dashboard" class="btn-back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Tableau de bord
+        </a>
+    </header>
+
+    <!-- ── MAIN ── -->
+    <main class="main">
+        <h1 class="page-title">Nouveau CV</h1>
+        <p class="page-sub">Remplissez les sections ci-dessous, puis validez en bas de page.</p>
+
+        <!-- Informations générales -->
+        <div class="section-card">
+            <h2 class="section-title">Informations générales</h2>
+            <div class="field">
+                <label for="titre_profil">Titre du profil</label>
+                <input type="text" id="titre_profil" placeholder="Ex : Développeur Web Full-Stack">
+            </div>
+            <div class="field">
+                <label for="resume">Résumé</label>
+                <textarea id="resume" placeholder="Décrivez votre profil en quelques lignes…"></textarea>
+            </div>
+        </div>
+
+        <!-- Informations personnelles -->
+        <div class="section-card">
+            <h2 class="section-title">Informations personnelles</h2>
+            <div class="grid-2">
+                <div class="field">
+                    <label for="first_name">Prénom</label>
+                    <input type="text" id="first_name" placeholder="Thomas">
+                </div>
+                <div class="field">
+                    <label for="name">Nom</label>
+                    <input type="text" id="name" placeholder="Dupont">
+                </div>
+            </div>
+            <div class="field">
+                <label for="address">Adresse</label>
+                <input type="text" id="address" placeholder="12 rue de la Paix, 75001 Paris">
+            </div>
+            <div class="grid-2">
+                <div class="field">
+                    <label for="phone_number">Téléphone</label>
+                    <input type="text" id="phone_number" placeholder="+33 6 12 34 56 78">
+                </div>
+                <div class="field">
+                    <label for="cv_email">Email</label>
+                    <input type="email" id="cv_email" placeholder="thomas.dupont@gmail.com">
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="field">
+                    <label for="linkedin">LinkedIn</label>
+                    <input type="url" id="linkedin" placeholder="https://linkedin.com/in/monprofil">
+                </div>
+                <div class="field">
+                    <label for="github">GitHub</label>
+                    <input type="url" id="github" placeholder="https://github.com/monutilisateur">
+                </div>
+            </div>
+            <div class="field">
+                <label for="portfoliio">Portfolio</label>
+                <input type="url" id="portfoliio" placeholder="https://monportfolio.com">
+            </div>
+        </div>
+
+        <!-- Expériences -->
+        <div class="section-card">
+            <h2 class="section-title">Expériences professionnelles</h2>
+            <div class="items-container" id="experiences-container"></div>
+            <button class="btn-add" onclick="addExperience()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Ajouter une expérience
+            </button>
+        </div>
+
+        <!-- Formations -->
+        <div class="section-card">
+            <h2 class="section-title">Formations</h2>
+            <div class="items-container" id="formations-container"></div>
+            <button class="btn-add" onclick="addFormation()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Ajouter une formation
+            </button>
+        </div>
+
+        <!-- Projets -->
+        <div class="section-card">
+            <h2 class="section-title">Projets</h2>
+            <div class="items-container" id="projects-container"></div>
+            <button class="btn-add" onclick="addProject()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Ajouter un projet
+            </button>
+        </div>
+
+        <!-- Langues -->
+        <div class="section-card">
+            <h2 class="section-title">Langues</h2>
+            <div class="items-container" id="languages-container"></div>
+            <button class="btn-add" onclick="addLanguage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Ajouter une langue
+            </button>
+        </div>
+
+        <!-- Activités -->
+        <div class="section-card">
+            <h2 class="section-title">Activités</h2>
+            <div class="items-container" id="activities-container"></div>
+            <button class="btn-add" onclick="addActivity()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Ajouter une activité
+            </button>
+        </div>
+
+        <!-- Submit -->
+        <div class="submit-area">
+            <button class="btn-submit" id="submitBtn" onclick="submitCV()">
+                Créer le CV
+            </button>
+            <div class="banner banner-success" id="bannerSuccess">
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span>CV créé avec succès ! Redirection vers le tableau de bord…</span>
+            </div>
+            <div class="banner banner-error" id="bannerError">
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <span id="errorText">Une erreur est survenue.</span>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /* ─── Compteurs ─────────────────────────────────────── */
+        let expCount = 0, formCount = 0, projCount = 0, langCount = 0, actCount = 0;
+
+        /* ─── Auth guard ─────────────────────────────────────── */
+        const token = localStorage.getItem('cv_token');
+        if (!token) window.location.href = '/';
+
+        /* ─── SVG icône suppression (réutilisé partout) ────────── */
+        const trashIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>`;
+
+        /* ─── Helpers DOM ────────────────────────────────────── */
+        function getIds(prefix, count) {
+            const ids = [];
+            for (let i = 0; i < count; i++) {
+                if (document.getElementById(`${prefix}-${i}`)) ids.push(i);
+            }
+            return ids;
+        }
+
+        function removeItem(id) {
+            document.getElementById(id).remove();
+        }
+
+        /* ─── Ajout d'expérience ─────────────────────────────── */
+        function addExperience() {
+            const i = expCount++;
+            const div = document.createElement('div');
+            div.className = 'item-block';
+            div.id = `exp-${i}`;
+            div.innerHTML = `
+                <div class="item-block-header">
+                    <span class="item-block-label">Expérience ${i + 1}</span>
+                    <button class="btn-remove" onclick="removeItem('exp-${i}')">${trashIcon} Supprimer</button>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Poste</label>
+                        <input type="text" id="exp-job-${i}" placeholder="Développeur Full-Stack">
+                    </div>
+                    <div class="field">
+                        <label>Entreprise</label>
+                        <input type="text" id="exp-company-${i}" placeholder="TechCorp">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Ville</label>
+                        <input type="text" id="exp-city-${i}" placeholder="Paris">
+                    </div>
+                    <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div>
+                            <label>Début</label>
+                            <input type="date" id="exp-start-${i}">
+                        </div>
+                        <div>
+                            <label>Fin</label>
+                            <input type="date" id="exp-end-${i}">
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Missions <span style="font-weight:400;text-transform:none;letter-spacing:0">(une par ligne)</span></label>
+                    <textarea id="exp-missions-${i}" placeholder="Développement API REST&#10;Intégration React&#10;Mise en place CI/CD"></textarea>
+                </div>`;
+            document.getElementById('experiences-container').appendChild(div);
+        }
+
+        /* ─── Ajout de formation ─────────────────────────────── */
+        function addFormation() {
+            const i = formCount++;
+            const div = document.createElement('div');
+            div.className = 'item-block';
+            div.id = `form-${i}`;
+            div.innerHTML = `
+                <div class="item-block-header">
+                    <span class="item-block-label">Formation ${i + 1}</span>
+                    <button class="btn-remove" onclick="removeItem('form-${i}')">${trashIcon} Supprimer</button>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Diplôme</label>
+                        <input type="text" id="form-diploma-${i}" placeholder="Master Informatique">
+                    </div>
+                    <div class="field">
+                        <label>École</label>
+                        <input type="text" id="form-school-${i}" placeholder="Université Paris-Saclay">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Ville</label>
+                        <input type="text" id="form-city-${i}" placeholder="Paris">
+                    </div>
+                    <div class="field">
+                        <label>Période</label>
+                        <input type="text" id="form-date-${i}" placeholder="2022 – 2024">
+                    </div>
+                </div>`;
+            document.getElementById('formations-container').appendChild(div);
+        }
+
+        /* ─── Ajout de projet ────────────────────────────────── */
+        function addProject() {
+            const i = projCount++;
+            const div = document.createElement('div');
+            div.className = 'item-block';
+            div.id = `proj-${i}`;
+            div.innerHTML = `
+                <div class="item-block-header">
+                    <span class="item-block-label">Projet ${i + 1}</span>
+                    <button class="btn-remove" onclick="removeItem('proj-${i}')">${trashIcon} Supprimer</button>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Nom</label>
+                        <input type="text" id="proj-name-${i}" placeholder="CV Generator">
+                    </div>
+                    <div class="field">
+                        <label>Lien</label>
+                        <input type="url" id="proj-link-${i}" placeholder="https://github.com/...">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Description</label>
+                    <textarea id="proj-desc-${i}" placeholder="Description du projet…"></textarea>
+                </div>
+                <div class="field">
+                    <label>Technologies <span style="font-weight:400;text-transform:none;letter-spacing:0">(séparées par des virgules)</span></label>
+                    <input type="text" id="proj-tech-${i}" placeholder="FastAPI, React, PostgreSQL">
+                </div>`;
+            document.getElementById('projects-container').appendChild(div);
+        }
+
+        /* ─── Ajout de langue ────────────────────────────────── */
+        function addLanguage() {
+            const i = langCount++;
+            const div = document.createElement('div');
+            div.className = 'item-block';
+            div.id = `lang-${i}`;
+            div.innerHTML = `
+                <div class="item-block-header">
+                    <span class="item-block-label">Langue ${i + 1}</span>
+                    <button class="btn-remove" onclick="removeItem('lang-${i}')">${trashIcon} Supprimer</button>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Langue</label>
+                        <input type="text" id="lang-name-${i}" placeholder="Anglais">
+                    </div>
+                    <div class="field">
+                        <label>Niveau</label>
+                        <input type="text" id="lang-level-${i}" placeholder="C1 – Courant">
+                    </div>
+                </div>`;
+            document.getElementById('languages-container').appendChild(div);
+        }
+
+        /* ─── Ajout d'activité ───────────────────────────────── */
+        function addActivity() {
+            const i = actCount++;
+            const div = document.createElement('div');
+            div.className = 'item-block';
+            div.id = `act-${i}`;
+            div.innerHTML = `
+                <div class="item-block-header">
+                    <span class="item-block-label">Activité ${i + 1}</span>
+                    <button class="btn-remove" onclick="removeItem('act-${i}')">${trashIcon} Supprimer</button>
+                </div>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Organisation</label>
+                        <input type="text" id="act-org-${i}" placeholder="BDE Université">
+                    </div>
+                    <div class="field">
+                        <label>Rôle</label>
+                        <input type="text" id="act-role-${i}" placeholder="Responsable communication">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Missions <span style="font-weight:400;text-transform:none;letter-spacing:0">(une par ligne)</span></label>
+                    <textarea id="act-missions-${i}" placeholder="Gestion des réseaux sociaux&#10;Organisation d'événements"></textarea>
+                </div>`;
+            document.getElementById('activities-container').appendChild(div);
+        }
+
+        /* ─── Submit ─────────────────────────────────────────── */
+        async function submitCV() {
+            const btn = document.getElementById('submitBtn');
+            hideBanners();
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Création en cours…';
+
+            const today = new Date().toISOString().split('T')[0];
+
+            const expIds  = getIds('exp',  expCount);
+            const formIds = getIds('form', formCount);
+            const projIds = getIds('proj', projCount);
+            const langIds = getIds('lang', langCount);
+            const actIds  = getIds('act',  actCount);
+
+            const cv = {
+                date_creation:     today,
+                date_modification: today,
+                titre_profil: document.getElementById('titre_profil').value,
+                resume:       document.getElementById('resume').value,
+
+                personnal_information: {
+                    name:         document.getElementById('name').value,
+                    first_name:   document.getElementById('first_name').value,
+                    address:      document.getElementById('address').value,
+                    phone_number: document.getElementById('phone_number').value,
+                    email:        document.getElementById('cv_email').value,
+                    linkedin:     document.getElementById('linkedin').value  || null,
+                    github:       document.getElementById('github').value    || null,
+                    portfoliio:   document.getElementById('portfoliio').value || null,
+                },
+
+                experiences: expIds.map(i => ({
+                    job:        document.getElementById(`exp-job-${i}`).value,
+                    company:    document.getElementById(`exp-company-${i}`).value,
+                    city:       document.getElementById(`exp-city-${i}`).value,
+                    start_date: document.getElementById(`exp-start-${i}`).value,
+                    end_date:   document.getElementById(`exp-end-${i}`).value || null,
+                    missions:   document.getElementById(`exp-missions-${i}`).value
+                        .split('\n').filter(m => m.trim()).map(m => ({ description: m.trim() }))
+                })),
+
+                formations: formIds.map(i => ({
+                    diploma: document.getElementById(`form-diploma-${i}`).value,
+                    school:  document.getElementById(`form-school-${i}`).value,
+                    city:    document.getElementById(`form-city-${i}`).value,
+                    date:    document.getElementById(`form-date-${i}`).value,
+                })),
+
+                projects: projIds.map(i => ({
+                    name:         document.getElementById(`proj-name-${i}`).value,
+                    description:  document.getElementById(`proj-desc-${i}`).value,
+                    link:         document.getElementById(`proj-link-${i}`).value || null,
+                    technologies: document.getElementById(`proj-tech-${i}`).value
+                        .split(',').filter(t => t.trim()).map(t => ({ name: t.trim() }))
+                })),
+
+                languages: langIds.map(i => ({
+                    language: document.getElementById(`lang-name-${i}`).value,
+                    level:    document.getElementById(`lang-level-${i}`).value,
+                })),
+
+                activities: actIds.map(i => ({
+                    organisation:      document.getElementById(`act-org-${i}`).value,
+                    role:              document.getElementById(`act-role-${i}`).value,
+                    activity_missions: document.getElementById(`act-missions-${i}`).value
+                        .split('\n').filter(m => m.trim()).map(m => ({ description: m.trim() }))
+                })),
+            };
+
+            try {
+                const res = await fetch('/cv', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type':  'application/json',
+                        'Authorization': `Bearer ${token}`   /* JWT requis */
+                    },
+                    body: JSON.stringify(cv)
+                });
+
+                /* Token expiré */
+                if (res.status === 401) { window.location.href = '/'; return; }
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById('bannerSuccess').classList.add('visible');
+                    /* Redirect après un bref délai pour que le message soit lisible */
+                    setTimeout(() => window.location.href = '/dashboard', 1800);
+                } else {
+                    showError(data.detail);
+                }
+
+            } catch (_) {
+                showError('Erreur réseau. Vérifiez votre connexion.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Créer le CV';
+            }
+        }
+
+        /* ─── Banners ────────────────────────────────────────── */
+        function hideBanners() {
+            document.getElementById('bannerSuccess').classList.remove('visible');
+            document.getElementById('bannerError').classList.remove('visible');
+        }
+
+        function showError(detail) {
+            let msg = 'Une erreur est survenue.';
+            if (typeof detail === 'string') {
+                msg = detail;
+            } else if (Array.isArray(detail)) {
+                /* Erreurs de validation Pydantic (422) */
+                msg = detail.map(e => e.msg || JSON.stringify(e)).join(' — ');
+            }
+            document.getElementById('errorText').textContent = msg;
+            document.getElementById('bannerError').classList.add('visible');
+            document.getElementById('bannerError').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

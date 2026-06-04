@@ -5,12 +5,13 @@ Routes FastAPI — CRUD SQLAlchemy + rendu Jinja2.
 
 from datetime import date
 
-from fastapi import FastAPI, HTTPException, Depends, Request, status
+from fastapi import FastAPI, HTTPException, Depends, Request, status, Response
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session, joinedload, selectinload
+from weasyprint import HTML
 
 from database import get_db
 from auth import hash_password, verify_password, create_access_token, get_current_user
@@ -30,7 +31,7 @@ templates = Jinja2Templates(directory="templates")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Remplace par ["http://ton-domaine.com"] en prod
+    allow_origins=["*"],  # Remplace par ["http://ton-domaine.com"] en prod
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=False,  # BUG CORRIGÉ : False obligatoire avec allow_origins=["*"]
@@ -107,9 +108,7 @@ def accueil(request: Request):
     Affiche le CV de test (cv_test.py) avec le template cv.html.
     Ne touche pas à la BDD — sert uniquement pour tester le rendu HTML.
     """
-    return templates.TemplateResponse(
-        request=request, name="cv.html", context={"cv": cv_test}
-    )
+    return templates.TemplateResponse(request=request, name="index.html", context={})
 
 
 @app.get("/cv2", response_class=HTMLResponse)
@@ -361,10 +360,14 @@ def update_cv(
     - C'est une stratégie "supprimer / recréer" — plus simple qu'une
       mise à jour champ par champ de chaque sous-élément
     """
-    db_cv = db.query(models.CV).filter(
-        models.CV.id_cv == id_cv,
-        models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
-    ).first()
+    db_cv = (
+        db.query(models.CV)
+        .filter(
+            models.CV.id_cv == id_cv,
+            models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
+        )
+        .first()
+    )
     if not db_cv:
         raise HTTPException(status_code=404, detail="CV introuvable")
 
@@ -510,10 +513,14 @@ def delete_cv(
       liés à ce CV sont supprimés automatiquement
     - db.commit() valide la suppression
     """
-    db_cv = db.query(models.CV).filter(
-        models.CV.id_cv == id_cv,
-        models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
-    ).first()
+    db_cv = (
+        db.query(models.CV)
+        .filter(
+            models.CV.id_cv == id_cv,
+            models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
+        )
+        .first()
+    )
     if not db_cv:
         raise HTTPException(status_code=404, detail="CV introuvable")
     db.delete(db_cv)
@@ -542,10 +549,14 @@ def render_cv_html(
       cette route lit les vraies données depuis PostgreSQL
     - Utile pour prévisualiser un CV stocké en BDD
     """
-    db_cv = db.query(models.CV).filter(
-        models.CV.id_cv == id_cv,
-        models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
-    ).first()
+    db_cv = (
+        db.query(models.CV)
+        .filter(
+            models.CV.id_cv == id_cv,
+            models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
+        )
+        .first()
+    )
     if not db_cv:
         raise HTTPException(status_code=404, detail="CV introuvable")
     cv = _db_cv_to_schema(db_cv)
@@ -645,3 +656,58 @@ def _db_cv_to_schema(db_cv: models.CV) -> classCV.CV:
             for a in db_cv.activities
         ],
     )
+
+
+@app.get("/cv/{id_cv}/export")
+def export_cv_to_pdf(
+    id_cv: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    # 1. Récupération des données du CV (tu peux réutiliser la logique de ton GET /cv/{id})
+    db_cv = (
+        db.query(models.CV)
+        .filter(models.CV.id_cv == id_cv, models.CV.id_user == current_user.id_user)
+        .first()
+    )
+    if not db_cv:
+        raise HTTPException(status_code=404, detail="CV non trouvé")
+
+    cv_data = _db_cv_to_schema(db_cv)
+
+    # 2. Rendu du template HTML (utilise le même template que pour l'affichage écran)
+    # Assure-toi que "cv_template.html" existe bien dans ton dossier templates/
+    html_content = templates.TemplateResponse(
+        request=request, name="cv.html", context={"cv": cv_data}
+    ).body.decode("utf-8")
+
+    # 3. Conversion en PDF avec WeasyPrint
+    # base_url est crucial pour que le CSS et les images soient chargés
+    pdf_file = HTML(string=html_content, base_url=str(request.base_url)).write_pdf()
+
+    # 4. Envoi du fichier
+    return Response(
+        content=pdf_file,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=cv_{cv_data.personnal_information.name}.pdf"
+        },
+    )
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_page(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html", context={})
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard_page(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="dashboard.html", context={}
+    )
+
+
+@app.get("/create", response_class=HTMLResponse)
+def create_page(request: Request):
+    return templates.TemplateResponse(request=request, name="create.html", context={})
