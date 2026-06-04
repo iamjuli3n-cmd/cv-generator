@@ -1,24 +1,103 @@
 """
 main.py
-Routes FastAPI — CRUD SQLAlchemy + anciens GET Jinja2.
+Routes FastAPI — CRUD SQLAlchemy + rendu Jinja2.
 """
 
-from fastapi import FastAPI, HTTPException, Depends, Request
+from datetime import date
+
+from fastapi import FastAPI, HTTPException, Depends, Request, status
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from database import get_db
+from auth import hash_password, verify_password, create_access_token, get_current_user
 import models
 import classCV
-from cv_test import cv_test  # ctrl shift L pour refactor
+from cv_test import cv_test
 
 app = FastAPI(title="CV Generator")
 templates = Jinja2Templates(directory="templates")
 
+# ═══════════════════════════════════════════════════════════════════════
+#  CORS
+#  BUG CORRIGÉ : allow_origins=["*"] + allow_credentials=True est une
+#  combinaison invalide — les navigateurs la rejettent silencieusement.
+#  En dev on désactive les credentials, en prod on met le vrai domaine.
+# ═══════════════════════════════════════════════════════════════════════
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # Remplace par ["http://ton-domaine.com"] en prod
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=False,  # BUG CORRIGÉ : False obligatoire avec allow_origins=["*"]
+)
+
+
+# ══════════════════════════════════════════
+#  AUTH — register / login / me
+# ══════════════════════════════════════════
+
+
+@app.post("/auth/register", response_model=classCV.UserOut, status_code=201)
+def register(user_data: classCV.UserCreate, db: Session = Depends(get_db)):
+    """
+    Crée un compte utilisateur.
+    - Vérifie que l'email n'est pas déjà pris
+    - Hache le mot de passe avec bcrypt (jamais stocké en clair)
+    - Retourne l'utilisateur créé sans le mot de passe
+    """
+    if db.query(models.User).filter_by(email=user_data.email).first():
+        raise HTTPException(status_code=400, detail="Email déjà utilisé")
+    user = models.User(
+        email=user_data.email,
+        hashed_password=hash_password(user_data.password),
+        date_creation=date.today(),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@app.post("/auth/login", response_model=classCV.Token)
+def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """
+    Connecte un utilisateur et retourne un token JWT.
+
+    OAuth2PasswordRequestForm attend un body en form-data avec :
+      - username  (= l'email ici, c'est la convention OAuth2)
+      - password
+
+    Le token retourné doit ensuite être envoyé dans le header de chaque requête :
+      Authorization: Bearer <token>
+    """
+    user = db.query(models.User).filter_by(email=form.username).first()
+    if not user or not verify_password(form.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email ou mot de passe incorrect",
+        )
+    token = create_access_token({"sub": str(user.id_user)})
+    return {"access_token": token, "token_type": "bearer"}
+
+
+@app.get("/users/me", response_model=classCV.UserOut)
+def get_me(current_user: models.User = Depends(get_current_user)):
+    """
+    Retourne le profil de l'utilisateur actuellement connecté.
+    Si le token est absent ou invalide → 401 automatique (géré par get_current_user).
+    """
+    return current_user
+
 
 # ══════════════════════════════════════════
 #  ANCIENS GET — rendu Jinja2 depuis cv_test
+#  Ces routes restent publiques (pas d'auth) car elles servent
+#  uniquement à tester le rendu HTML avec des données fictives.
 # ══════════════════════════════════════════
 
 
@@ -58,12 +137,16 @@ def get_cv_test_json():
 
 
 @app.post("/cv", response_model=classCV.CV)
-def create_cv(cv_data: classCV.CV, db: Session = Depends(get_db)):
+def create_cv(
+    cv_data: classCV.CV,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     """
-    Crée un CV complet en BDD.
+    Crée un CV complet en BDD, lié à l'utilisateur connecté.
 
     - Reçoit un objet CV complet au format JSON dans le body de la requête
-    - Insère le CV principal, puis toutes les sections liées
+    - Insère le CV principal (avec id_user), puis toutes les sections liées
     - db.flush() après chaque insertion pour récupérer l'id généré
       sans encore valider la transaction
     - db.commit() à la fin valide tout en une seule transaction :
@@ -77,6 +160,7 @@ def create_cv(cv_data: classCV.CV, db: Session = Depends(get_db)):
         resume=cv_data.resume,
         date_creation=cv_data.date_creation,
         date_modification=cv_data.date_modification,
+        id_user=current_user.id_user,  # Lie le CV à l'utilisateur connecté
     )
     db.add(db_cv)
     db.flush()
@@ -188,15 +272,17 @@ def create_cv(cv_data: classCV.CV, db: Session = Depends(get_db)):
 
 
 @app.get("/cv", response_model=list[classCV.CV])
-def get_all_cv(db: Session = Depends(get_db)):
+def get_all_cv(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     """
-    Retourne la liste de tous les CV stockés en BDD.
-
-    - db.query(models.CV).all() : SELECT * FROM cv
-    - Chaque CV est converti en schéma Pydantic via _db_cv_to_schema
+    Retourne uniquement les CV de l'utilisateur connecté.
+    - Filtre sur id_user → chaque utilisateur ne voit que ses propres CVs
     - Retourne une liste vide [] si aucun CV n'existe
     """
-    return [_db_cv_to_schema(cv) for cv in db.query(models.CV).all()]
+    cvs = db.query(models.CV).filter(models.CV.id_user == current_user.id_user).all()
+    return [_db_cv_to_schema(cv) for cv in cvs]
 
 
 # ══════════════════════════════════════════
@@ -205,17 +291,49 @@ def get_all_cv(db: Session = Depends(get_db)):
 
 
 @app.get("/cv/{id_cv}", response_model=classCV.CV)
-def get_cv(id_cv: int, db: Session = Depends(get_db)):
+def get_cv(
+    id_cv: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     """
-    Retourne un CV précis par son id.
+    Retourne un CV précis par son id avec Eager Loading.
+    Au lieu de faire ~15 requêtes (N+1), on en fait ~8 (fixes).
+    BUG CORRIGÉ : ajout du filtre id_user — sans lui, n'importe quel
+    utilisateur connecté pouvait lire le CV de quelqu'un d'autre.
+    """
+    db_cv = (
+        db.query(models.CV)
+        .options(
+            # 1. Infos perso (1-to-1) -> JOIN classique, pas de duplication de lignes
+            joinedload(models.CV.personnal_information),
+            # 2. Expériences + leurs missions (1-to-Many imbriqués) -> Requêtes IN séparées
+            selectinload(models.CV.experiences).selectinload(
+                models.Experience.missions
+            ),
+            # 3. Formations -> Requête IN séparée
+            selectinload(models.CV.formations),
+            # 4. Projets + leurs technologies (Many-to-Many imbriqué) -> Requêtes IN séparées
+            selectinload(models.CV.projects).selectinload(models.Project.technologies),
+            # 5. Langues -> Requête IN séparée
+            selectinload(models.CV.languages),
+            # 6. Activités + leurs missions (1-to-Many imbriqués) -> Requêtes IN séparées
+            selectinload(models.CV.activities).selectinload(
+                models.Activity.activity_missions
+            ),
+        )
+        .filter(
+            models.CV.id_cv == id_cv,
+            models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
+        )
+        .first()
+    )
 
-    - Cherche le CV avec l'id fourni dans l'URL
-    - Si introuvable, retourne une erreur 404 avec un message clair
-    - Sinon retourne le CV complet avec toutes ses sections
-    """
-    db_cv = db.query(models.CV).filter(models.CV.id_cv == id_cv).first()
+    # Si le CV n'existe pas OU appartient à quelqu'un d'autre → 404
+    # (on ne dit pas "interdit" pour ne pas révéler l'existence du CV)
     if not db_cv:
         raise HTTPException(status_code=404, detail="CV introuvable")
+
     return _db_cv_to_schema(db_cv)
 
 
@@ -225,18 +343,28 @@ def get_cv(id_cv: int, db: Session = Depends(get_db)):
 
 
 @app.put("/cv/{id_cv}", response_model=classCV.CV)
-def update_cv(id_cv: int, cv_data: classCV.CV, db: Session = Depends(get_db)):
+def update_cv(
+    id_cv: int,
+    cv_data: classCV.CV,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),  # BUG CORRIGÉ : manquait
+):
     """
     Remplace un CV existant par les nouvelles données envoyées.
+    BUG CORRIGÉ : current_user manquait entièrement — n'importe qui
+    pouvait modifier le CV de quelqu'un d'autre.
 
-    - Vérifie que le CV existe, sinon 404
+    - Vérifie que le CV existe ET appartient à l'utilisateur connecté, sinon 404
     - Met à jour les champs du CV principal
     - Supprime toutes les sections liées existantes (expériences, formations...)
     - Les recrée avec les nouvelles données
     - C'est une stratégie "supprimer / recréer" — plus simple qu'une
       mise à jour champ par champ de chaque sous-élément
     """
-    db_cv = db.query(models.CV).filter(models.CV.id_cv == id_cv).first()
+    db_cv = db.query(models.CV).filter(
+        models.CV.id_cv == id_cv,
+        models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
+    ).first()
     if not db_cv:
         raise HTTPException(status_code=404, detail="CV introuvable")
 
@@ -270,6 +398,7 @@ def update_cv(id_cv: int, cv_data: classCV.CV, db: Session = Depends(get_db)):
     db.query(models.Language).filter_by(id_cv=id_cv).delete()
     db.query(models.Activity).filter_by(id_cv=id_cv).delete()
     db.flush()
+
     # Recréation avec les nouvelles données
     info = cv_data.personnal_information
     db.add(
@@ -364,18 +493,27 @@ def update_cv(id_cv: int, cv_data: classCV.CV, db: Session = Depends(get_db)):
 
 
 @app.delete("/cv/{id_cv}")
-def delete_cv(id_cv: int, db: Session = Depends(get_db)):
+def delete_cv(
+    id_cv: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     """
     Supprime un CV et toutes ses données liées.
+    BUG CORRIGÉ : le filtre id_user manquait — n'importe quel utilisateur
+    connecté pouvait supprimer le CV de quelqu'un d'autre.
 
-    - Vérifie que le CV existe, sinon 404
+    - Vérifie que le CV existe ET appartient à l'utilisateur connecté, sinon 404
     - db.delete(db_cv) supprime le CV
     - Grâce au cascade="all, delete-orphan" défini dans models.py,
       toutes les expériences, missions, formations, projets...
       liés à ce CV sont supprimés automatiquement
     - db.commit() valide la suppression
     """
-    db_cv = db.query(models.CV).filter(models.CV.id_cv == id_cv).first()
+    db_cv = db.query(models.CV).filter(
+        models.CV.id_cv == id_cv,
+        models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
+    ).first()
     if not db_cv:
         raise HTTPException(status_code=404, detail="CV introuvable")
     db.delete(db_cv)
@@ -389,15 +527,25 @@ def delete_cv(id_cv: int, db: Session = Depends(get_db)):
 
 
 @app.get("/cv/{id_cv}/html", response_class=HTMLResponse)
-def render_cv_html(id_cv: int, request: Request, db: Session = Depends(get_db)):
+def render_cv_html(
+    id_cv: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),  # BUG CORRIGÉ : manquait
+):
     """
     Récupère un CV en BDD et le rend avec le template Jinja2 cv.html.
+    BUG CORRIGÉ : cette route n'avait aucune protection — n'importe qui
+    pouvait visualiser le CV HTML de n'importe quel utilisateur.
 
     - Contrairement à GET / qui utilise cv_test.py,
       cette route lit les vraies données depuis PostgreSQL
     - Utile pour prévisualiser un CV stocké en BDD
     """
-    db_cv = db.query(models.CV).filter(models.CV.id_cv == id_cv).first()
+    db_cv = db.query(models.CV).filter(
+        models.CV.id_cv == id_cv,
+        models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
+    ).first()
     if not db_cv:
         raise HTTPException(status_code=404, detail="CV introuvable")
     cv = _db_cv_to_schema(db_cv)

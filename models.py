@@ -8,6 +8,18 @@ from sqlalchemy.orm import relationship
 from database import Base
 
 
+class User(Base):
+    __tablename__ = "user"
+
+    id_user = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(100), nullable=False, unique=True)
+    hashed_password = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=True)
+    date_creation = Column(Date, nullable=True)
+
+    cvs = relationship("CV", back_populates="user", cascade="all, delete-orphan")
+
+
 class PersonnalInformation(Base):
     __tablename__ = "personnal_information"
 
@@ -145,6 +157,8 @@ class CV(Base):
     resume = Column(Text, nullable=True)
     date_creation = Column(Date, nullable=True)
     date_modification = Column(Date, nullable=True)
+    id_user = Column(Integer, ForeignKey("user.id_user"), nullable=False)
+    user = relationship("User", back_populates="cvs")
 
     # Les relationship(...) ne créent pas de colonnes dans la BDD — ils servent uniquement à naviguer entre les objets Python :
     personnal_information = relationship(
