@@ -6,7 +6,7 @@ Routes FastAPI — CRUD SQLAlchemy + anciens GET Jinja2.
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from database import get_db
 import models
@@ -207,15 +207,40 @@ def get_all_cv(db: Session = Depends(get_db)):
 @app.get("/cv/{id_cv}", response_model=classCV.CV)
 def get_cv(id_cv: int, db: Session = Depends(get_db)):
     """
-    Retourne un CV précis par son id.
-
-    - Cherche le CV avec l'id fourni dans l'URL
-    - Si introuvable, retourne une erreur 404 avec un message clair
-    - Sinon retourne le CV complet avec toutes ses sections
+    Retourne un CV précis par son id avec Eager Loading.
+    Au lieu de faire ~15 requêtes (N+1), on en fait ~8 (fixes).
     """
-    db_cv = db.query(models.CV).filter(models.CV.id_cv == id_cv).first()
+
+    db_cv = (
+        db.query(models.CV)
+        # On précise à SQLAlchemy CE QU'ON VEUT qu'il charge dès le départ
+        .options(
+            # 1. Infos perso (1-to-1) -> JOIN classique, pas de duplication de lignes
+            joinedload(models.CV.personnal_information),
+            # 2. Expériences + leurs missions (1-to-Many imbriqués) -> Requêtes IN séparées
+            selectinload(models.CV.experiences).selectinload(
+                models.Experience.missions
+            ),
+            # 3. Formations -> Requête IN séparée
+            selectinload(models.CV.formations),
+            # 4. Projets + leurs technologies (Many-to-Many imbriqué) -> Requêtes IN séparées
+            selectinload(models.CV.projects).selectinload(models.Project.technologies),
+            # 5. Langues -> Requête IN séparée
+            selectinload(models.CV.languages),
+            # 6. Activités + leurs missions (1-to-Many imbriqués) -> Requêtes IN séparées
+            selectinload(models.CV.activities).selectinload(
+                models.Activity.activity_missions
+            ),
+        )
+        .filter(models.CV.id_cv == id_cv)
+        .first()
+    )
+
     if not db_cv:
         raise HTTPException(status_code=404, detail="CV introuvable")
+
+    # La fonction de conversion reste STRICTEMENT IDENTIQUE
+    # car les objets db_cv.experiences, etc., sont déjà remplis dans la mémoire !
     return _db_cv_to_schema(db_cv)
 
 
