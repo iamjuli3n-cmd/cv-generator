@@ -522,6 +522,19 @@
         const token = localStorage.getItem('cv_token');
         if (!token) window.location.href = '/';
 
+        /* ─── Mode édition ──────────────────────────────────── */
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId    = urlParams.get('id') ? parseInt(urlParams.get('id'), 10) : null;
+        const isEdit    = editId !== null;
+        let   originalCreationDate = null; /* conservée pour le PUT */
+
+        if (isEdit) {
+            document.querySelector('.page-title').textContent = 'Modifier le CV';
+            document.querySelector('.page-sub').textContent   = 'Modifiez les sections ci-dessous, puis validez en bas de page.';
+            document.getElementById('submitBtn').textContent  = 'Enregistrer les modifications';
+            loadCVForEdit(editId);
+        }
+
         /* ─── SVG icône suppression (réutilisé partout) ────────── */
         const trashIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="3 6 5 6 21 6"/>
@@ -703,13 +716,100 @@
             document.getElementById('activities-container').appendChild(div);
         }
 
+        /* ─── Chargement du CV pour édition ─────────────────── */
+        async function loadCVForEdit(id) {
+            try {
+                const res = await fetch(`/cv/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.status === 401) { window.location.href = '/'; return; }
+                if (!res.ok) { window.location.href = '/dashboard'; return; }
+
+                const cv = await res.json();
+                originalCreationDate = cv.date_creation;
+
+                /* Infos générales */
+                document.getElementById('titre_profil').value = cv.titre_profil || '';
+                document.getElementById('resume').value       = cv.resume || '';
+
+                /* Infos personnelles */
+                const info = cv.personnal_information || {};
+                document.getElementById('first_name').value   = info.first_name || '';
+                document.getElementById('name').value         = info.name || '';
+                document.getElementById('address').value      = info.address || '';
+                document.getElementById('phone_number').value = info.phone_number || '';
+                document.getElementById('cv_email').value     = info.email || '';
+                document.getElementById('linkedin').value     = info.linkedin || '';
+                document.getElementById('github').value       = info.github || '';
+                document.getElementById('portfoliio').value   = info.portfoliio || '';
+
+                /* Expériences */
+                for (const exp of cv.experiences || []) {
+                    addExperience();
+                    const i = expCount - 1;
+                    document.getElementById(`exp-job-${i}`).value      = exp.job || '';
+                    document.getElementById(`exp-company-${i}`).value  = exp.company || '';
+                    document.getElementById(`exp-city-${i}`).value     = exp.city || '';
+                    document.getElementById(`exp-start-${i}`).value    = exp.start_date || '';
+                    document.getElementById(`exp-end-${i}`).value      = exp.end_date || '';
+                    document.getElementById(`exp-missions-${i}`).value =
+                        (exp.missions || []).map(m => m.description).join('\n');
+                }
+
+                /* Formations */
+                for (const f of cv.formations || []) {
+                    addFormation();
+                    const i = formCount - 1;
+                    document.getElementById(`form-diploma-${i}`).value = f.diploma || '';
+                    document.getElementById(`form-school-${i}`).value  = f.school || '';
+                    document.getElementById(`form-city-${i}`).value    = f.city || '';
+                    document.getElementById(`form-date-${i}`).value    = f.date || '';
+                }
+
+                /* Projets */
+                for (const p of cv.projects || []) {
+                    addProject();
+                    const i = projCount - 1;
+                    document.getElementById(`proj-name-${i}`).value = p.name || '';
+                    document.getElementById(`proj-desc-${i}`).value = p.description || '';
+                    document.getElementById(`proj-link-${i}`).value = p.link || '';
+                    document.getElementById(`proj-tech-${i}`).value =
+                        (p.technologies || []).map(t => t.name).join(', ');
+                }
+
+                /* Langues */
+                for (const l of cv.languages || []) {
+                    addLanguage();
+                    const i = langCount - 1;
+                    document.getElementById(`lang-name-${i}`).value  = l.language || '';
+                    document.getElementById(`lang-level-${i}`).value = l.level || '';
+                }
+
+                /* Activités */
+                for (const a of cv.activities || []) {
+                    addActivity();
+                    const i = actCount - 1;
+                    document.getElementById(`act-org-${i}`).value     = a.organisation || '';
+                    document.getElementById(`act-role-${i}`).value    = a.role || '';
+                    document.getElementById(`act-missions-${i}`).value =
+                        (a.activity_missions || []).map(m => m.description).join('\n');
+                }
+
+            } catch (_) {
+                window.location.href = '/dashboard';
+            }
+        }
+
         /* ─── Submit ─────────────────────────────────────────── */
         async function submitCV() {
             const btn = document.getElementById('submitBtn');
             hideBanners();
 
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span>Création en cours…';
+            btn.innerHTML = isEdit
+                ? '<span class="spinner"></span>Enregistrement…'
+                : '<span class="spinner"></span>Création en cours…';
 
             const today = new Date().toISOString().split('T')[0];
 
@@ -720,7 +820,8 @@
             const actIds  = getIds('act',  actCount);
 
             const cv = {
-                date_creation:     today,
+                /* En édition on conserve la date de création originale */
+                date_creation:     isEdit ? (originalCreationDate || today) : today,
                 date_modification: today,
                 titre_profil: document.getElementById('titre_profil').value,
                 resume:       document.getElementById('resume').value,
@@ -775,23 +876,25 @@
             };
 
             try {
-                const res = await fetch('/cv', {
-                    method: 'POST',
+                const res = await fetch(isEdit ? `/cv/${editId}` : '/cv', {
+                    method:  isEdit ? 'PUT' : 'POST',
                     headers: {
                         'Content-Type':  'application/json',
-                        'Authorization': `Bearer ${token}`   /* JWT requis */
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(cv)
                 });
 
-                /* Token expiré */
                 if (res.status === 401) { window.location.href = '/'; return; }
 
                 const data = await res.json();
 
                 if (res.ok) {
+                    const msgSpan = document.querySelector('#bannerSuccess span');
+                    if (msgSpan) msgSpan.textContent = isEdit
+                        ? 'CV modifié avec succès ! Redirection en cours…'
+                        : 'CV créé avec succès ! Redirection en cours…';
                     document.getElementById('bannerSuccess').classList.add('visible');
-                    /* Redirect après un bref délai pour que le message soit lisible */
                     setTimeout(() => window.location.href = '/dashboard', 1800);
                 } else {
                     showError(data.detail);
@@ -801,7 +904,7 @@
                 showError('Erreur réseau. Vérifiez votre connexion.');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Créer le CV';
+                btn.innerHTML = isEdit ? 'Enregistrer les modifications' : 'Créer le CV';
             }
         }
 

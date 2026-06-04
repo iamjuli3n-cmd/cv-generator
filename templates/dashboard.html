@@ -819,8 +819,7 @@
 
         /* ─── Actions ────────────────────────────────────────── */
         function editCV(btn) {
-            /* Redirige vers la prévisualisation HTML du CV */
-            window.location.href = `/cv/${btn.dataset.id}/html`;
+            window.location.href = `/create?id=${btn.dataset.id}`;
         }
 
         function handleNewCV() {
