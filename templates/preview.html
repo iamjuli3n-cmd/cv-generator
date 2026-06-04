@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Generator — Prévisualisation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:         #1c2533;
+            --accent:       #2d6a4f;
+            --accent-hover: #40916c;
+            --text:         #1c2533;
+            --text-muted:   #7a8899;
+            --border:       #e0d9cf;
+            --bg:           #f8f5ef;
+            --red:          #dc2626;
+            --header-h:     66px;
+            --tabs-h:       52px;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* ─── HEADER ────────────────────────────────────── */
+        .header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            height: var(--header-h);
+            background: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            box-shadow: 0 1px 0 rgba(0,0,0,.12);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            background: rgba(255,255,255,.07);
+            color: rgba(255,255,255,.65);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background .2s, color .2s;
+        }
+
+        .btn-back:hover { background: rgba(255,255,255,.13); color: white; }
+        .btn-back svg { width: 14px; height: 14px; }
+
+        .header-title {
+            font-family: 'Fraunces', serif;
+            font-size: 17px;
+            font-weight: 300;
+            color: rgba(255,255,255,.8);
+        }
+
+        .btn-export {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, box-shadow .2s;
+        }
+
+        .btn-export:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 3px 10px rgba(45,106,79,.3);
+        }
+
+        .btn-export:disabled { opacity: .65; cursor: not-allowed; }
+        .btn-export svg { width: 16px; height: 16px; }
+
+        /* ─── TABS BAR ───────────────────────────────────── */
+        .tabs-bar {
+            position: fixed;
+            top: var(--header-h);
+            left: 0; right: 0;
+            z-index: 99;
+            height: var(--tabs-h);
+            background: var(--navy);
+            border-top: 1px solid rgba(255,255,255,.06);
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            gap: 4px;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 18px;
+            background: transparent;
+            color: rgba(255,255,255,.45);
+            border: 1px solid transparent;
+            border-radius: 7px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .18s, color .18s, border-color .18s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,.07);
+            color: rgba(255,255,255,.75);
+        }
+
+        .tab.active {
+            background: rgba(45,106,79,.25);
+            color: #52b788;
+            border-color: rgba(45,106,79,.4);
+        }
+
+        .tab-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity .18s;
+            flex-shrink: 0;
+        }
+
+        .tab.active .tab-dot { opacity: 1; }
+
+        /* ─── IFRAME ZONE ────────────────────────────────── */
+        .frame-wrap {
+            position: fixed;
+            top: calc(var(--header-h) + var(--tabs-h));
+            left: 0; right: 0; bottom: 0;
+        }
+
+        #cvFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        /* ─── LOADING OVERLAY ────────────────────────────── */
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(248,245,239,.88);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 10;
+            backdrop-filter: blur(3px);
+        }
+
+        .loading-overlay.hidden { display: none; }
+
+        .spinner-ring {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(45,106,79,.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        .loading-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ─── ERROR STATE ────────────────────────────────── */
+        .error-state {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .error-state.visible { display: flex; }
+
+        .error-state svg { color: var(--red); width: 40px; height: 40px; }
+        .error-state p { font-size: 14px; color: var(--text-muted); }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+        <div class="header-left">
+            <a href="/dashboard" class="btn-back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                Tableau de bord
+            </a>
+            <span class="header-title">Prévisualisation</span>
+        </div>
+
+        <button class="btn-export" id="btnExport" onclick="exportPDF()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Exporter en PDF
+        </button>
+    </header>
+
+    <!-- ── TABS ── -->
+    <div class="tabs-bar">
+        <button class="tab active" data-template="cv.html">
+            <span class="tab-dot"></span>
+            Sidebar Classic
+        </button>
+        <button class="tab" data-template="cv2.html">
+            <span class="tab-dot"></span>
+            Minimal
+        </button>
+        <button class="tab" data-template="cv3.html">
+            <span class="tab-dot"></span>
+            Classique Parisien
+        </button>
+        <button class="tab" data-template="cv4.html">
+            <span class="tab-dot"></span>
+            Modern Tech
+        </button>
+    </div>
+
+    <!-- ── FRAME ── -->
+    <div class="frame-wrap">
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner-ring"></div>
+            <span class="loading-label">Chargement du template…</span>
+        </div>
+
+        <div class="error-state" id="errorState">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p>Impossible de charger ce template.<br>Vérifiez votre connexion.</p>
+        </div>
+
+        <iframe
+            id="cvFrame"
+            sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            title="Prévisualisation du CV"
+        ></iframe>
+    </div>
+
+    <script>
+        /* ─── Init ──────────────────────────────────────── */
+        const cvId   = {{ cv_id }};   /* injecté par Jinja2 */
+        function getToken() {
+            const m = document.cookie.match(/(?:^|;\s*)cv_token=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : null;
+        }
+        const token  = getToken();
+        let   currentTemplate = 'cv.html';
+
+        /* ─── Chargement d'un template ──────────────────── */
+        async function loadPreview(template) {
+            currentTemplate = template;
+
+            /* Mettre à jour les onglets */
+            document.querySelectorAll('.tab').forEach(t =>
+                t.classList.toggle('active', t.dataset.template === template)
+            );
+
+            showLoading(true);
+            hideError();
+
+            try {
+                const res = await fetch(`/cv/${cvId}/html?template=${template}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.status === 401) { window.location.href = '/'; return; }
+
+                if (!res.ok) { showError(); return; }
+
+                const html = await res.text();
+
+                /* Injecter dans l'iframe via srcdoc (pas de requête supplémentaire) */
+                document.getElementById('cvFrame').srcdoc = html;
+
+            } catch (_) {
+                showError();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        /* ─── Export PDF ─────────────────────────────────── */
+        async function exportPDF() {
+            const btn = document.getElementById('btnExport');
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;animation:spin .7s linear infinite">
+                    <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" opacity=".25"/>
+                    <path d="M21 12a9 9 0 0 0-9-9" stroke-linecap="round"/>
+                </svg>
+                Export en cours…
+            `;
+
+            try {
+                const res = await fetch(`/cv/${cvId}/export?template=${currentTemplate}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.status === 401) { window.location.href = '/'; return; }
+
+                if (!res.ok) {
+                    alert("Erreur lors de la génération du PDF.");
+                    return;
+                }
+
+                /* Déclencher le téléchargement */
+                const blob = await res.blob();
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement('a');
+                a.href     = url;
+                a.download = `cv_${cvId}_${currentTemplate.replace('.html', '')}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+            } catch (_) {
+                alert("Erreur réseau lors de l'export.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exporter en PDF
+                `;
+            }
+        }
+
+        /* ─── Helpers ────────────────────────────────────── */
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+        }
+
+        function showError() {
+            document.getElementById('errorState').classList.add('visible');
+        }
+
+        function hideError() {
+            document.getElementById('errorState').classList.remove('visible');
+        }
+
+        /* ─── Clics sur les onglets ──────────────────────── */
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => loadPreview(tab.dataset.template));
+        });
+
+        /* ─── Démarrage ──────────────────────────────────── */
+        loadPreview('cv.html');
+    </script>
+</body>
+</html>

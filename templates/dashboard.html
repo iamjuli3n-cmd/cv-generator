@@ -333,8 +333,27 @@
             color: white;
         }
 
+        .btn-preview {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 13px;
+            border-radius: 7px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            background: #e8f1fb;
+            color: #2563eb;
+            transition: background .18s, color .18s;
+        }
+
+        .btn-preview:hover { background: #2563eb; color: white; }
+
         .btn-edit svg,
-        .btn-delete svg { width: 14px; height: 14px; }
+        .btn-delete svg,
+        .btn-preview svg { width: 14px; height: 14px; }
 
         /* ─── SKELETON ───────────────────────────────────── */
         .skeleton-list {
@@ -694,14 +713,16 @@
 
     <script>
         /* ─── État ─────────────────────────────────────────── */
-        let token          = localStorage.getItem('cv_token');
+        function getToken() {
+            const m = document.cookie.match(/(?:^|;\s*)cv_token=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : null;
+        }
+        let token          = getToken();
         let cvs            = [];
         let pendingDeleteId = null;
 
         /* ─── Init ─────────────────────────────────────────── */
         async function init() {
-            if (!token) { redirect(); return; }
-
             try {
                 const userRes = await apiFetch('/users/me');
                 if (!userRes) return;
@@ -711,7 +732,7 @@
 
                 await loadCVs();
             } catch (_) {
-                redirect();
+                window.location.href = '/';
             }
         }
 
@@ -788,6 +809,16 @@
 
                     <!-- Actions -->
                     <div class="cv-row-actions">
+                        <button class="btn-preview"
+                                data-id="${cv.id_cv}"
+                                onclick="previewCV(this)"
+                                title="Prévisualiser ce CV">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <span>Prévisualiser</span>
+                        </button>
                         <button class="btn-edit"
                                 data-id="${cv.id_cv}"
                                 onclick="editCV(this)"
@@ -818,6 +849,10 @@
         }
 
         /* ─── Actions ────────────────────────────────────────── */
+        function previewCV(btn) {
+            window.location.href = `/cv/${btn.dataset.id}/preview`;
+        }
+
         function editCV(btn) {
             window.location.href = `/create?id=${btn.dataset.id}`;
         }
@@ -881,12 +916,7 @@
 
         /* ─── Auth / nav ─────────────────────────────────────── */
         function logout() {
-            localStorage.removeItem('cv_token');
-            window.location.href = '/';
-        }
-
-        function redirect() {
-            window.location.href = '/';
+            window.location.href = '/logout';
         }
 
         /* ─── Helpers ────────────────────────────────────────── */

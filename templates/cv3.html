@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>{{ cv.personnal_information.first_name }} {{ cv.personnal_information.name }} — CV</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Nunito+Sans:wght@300;400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #faf8f4;
+      --surface: #ffffff;
+      --text:    #1a1714;
+      --muted:   #7a6f65;
+      --gold:    #b8952a;
+      --gold-lt: #e8d8a0;
+      --border:  #ede7dc;
+      --serif:   'Cormorant Garamond', Georgia, serif;
+      --sans:    'Nunito Sans', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    /* ── Page ── */
+    .page {
+      max-width: 800px;
+      margin: 40px auto;
+      background: var(--surface);
+      padding: 64px 72px;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.07);
+    }
+
+    /* ── Header ── */
+    .cv-header {
+      text-align: center;
+      padding-bottom: 30px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .cv-header::after {
+      content: '◆';
+      display: block;
+      font-size: 9px;
+      color: var(--gold);
+      margin-top: 20px;
+      letter-spacing: 6px;
+      text-align: center;
+    }
+
+    .header-name {
+      font-family: var(--serif);
+      font-size: 44px;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      line-height: 1.1;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .header-title {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-style: italic;
+      font-weight: 300;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+    }
+
+    .header-contact {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0 10px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    .contact-sep {
+      color: var(--gold);
+      font-size: 9px;
+    }
+
+    /* ── Résumé ── */
+    .cv-resume {
+      font-family: var(--serif);
+      font-size: 15.5px;
+      font-style: italic;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.85;
+      text-align: center;
+      max-width: 580px;
+      margin: 0 auto 36px;
+    }
+
+    /* ── Section ── */
+    .section { margin-bottom: 30px; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--sans);
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+
+    .section-title::before,
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Entry ── */
+    .entry {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 0 28px;
+      padding-bottom: 18px;
+      margin-bottom: 18px;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .entry:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+
+    .entry-meta {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+      padding-top: 2px;
+      line-height: 1.5;
+    }
+
+    .entry-title {
+      font-weight: 600;
+      font-size: 13.5px;
+      margin-bottom: 2px;
+      color: var(--text);
+    }
+
+    .entry-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-style: italic;
+    }
+
+    .mission-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .mission-list li {
+      font-size: 12.5px;
+      color: var(--muted);
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .mission-list li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+      font-size: 11px;
+    }
+
+    /* ── Projets (2 colonnes) ── */
+    .project-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .project-card {
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--gold);
+      padding: 14px 16px;
+    }
+
+    .project-name {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .project-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .project-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .project-tag {
+      font-size: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 1px 7px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .project-link {
+      font-size: 11.5px;
+      color: var(--gold);
+      text-decoration: none;
+      border-bottom: 1px solid var(--gold-lt);
+    }
+
+    /* ── Deux colonnes égales (langues + activités) ── */
+    .two-equal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+
+    /* ── Langues ── */
+    .lang-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .lang-row:last-child { border-bottom: none; }
+
+    .lang-level {
+      font-size: 11px;
+      color: var(--gold);
+      font-style: italic;
+    }
+
+    @media print {
+      body { background: white; }
+      .page { box-shadow: none; margin: 0; padding: 36px 48px; max-width: 100%; }
+      @page { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══ Header ══ -->
+  <header class="cv-header">
+    <h1 class="header-name">
+      {{ cv.personnal_information.first_name }}&ensp;{{ cv.personnal_information.name }}
+    </h1>
+    <p class="header-title">{{ cv.titre_profil }}</p>
+    <div class="header-contact">
+      <span>{{ cv.personnal_information.email }}</span>
+      <span class="contact-sep">◆</span>
+      <span>{{ cv.personnal_information.phone_number }}</span>
+      <span class="contact-sep">◆</span>
+      <span>{{ cv.personnal_information.address }}</span>
+      {% if cv.personnal_information.linkedin %}
+      <span class="contact-sep">◆</span>
+      <span>{{ cv.personnal_information.linkedin }}</span>
+      {% endif %}
+      {% if cv.personnal_information.github %}
+      <span class="contact-sep">◆</span>
+      <span>{{ cv.personnal_information.github }}</span>
+      {% endif %}
+      {% if cv.personnal_information.portfoliio %}
+      <span class="contact-sep">◆</span>
+      <span>{{ cv.personnal_information.portfoliio }}</span>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ══ Résumé ══ -->
+  <p class="cv-resume">{{ cv.resume }}</p>
+
+  <!-- ══ Expériences ══ -->
+  {% if cv.experiences %}
+  <div class="section">
+    <p class="section-title">Expériences professionnelles</p>
+    {% for exp in cv.experiences %}
+    <div class="entry">
+      <div class="entry-meta">
+        {{ exp.start_date }}<br>{{ exp.end_date if exp.end_date else "Présent" }}
+      </div>
+      <div>
+        <p class="entry-title">{{ exp.job }}</p>
+        <p class="entry-sub">{{ exp.company }} &middot; {{ exp.city }}</p>
+        {% if exp.missions %}
+        <ul class="mission-list">
+          {% for m in exp.missions %}<li>{{ m.description }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ══ Formations ══ -->
+  {% if cv.formations %}
+  <div class="section">
+    <p class="section-title">Formation</p>
+    {% for f in cv.formations %}
+    <div class="entry">
+      <div class="entry-meta">{{ f.date }}</div>
+      <div>
+        <p class="entry-title">{{ f.diploma }}</p>
+        <p class="entry-sub">{{ f.school }} &middot; {{ f.city }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ══ Projets ══ -->
+  {% if cv.projects %}
+  <div class="section">
+    <p class="section-title">Projets</p>
+    <div class="project-grid">
+      {% for p in cv.projects %}
+      <div class="project-card">
+        <p class="project-name">{{ p.name }}</p>
+        <p class="project-desc">{{ p.description }}</p>
+        {% if p.technologies %}
+        <div class="project-tags">
+          {% for t in p.technologies %}<span class="project-tag">{{ t.name }}</span>{% endfor %}
+        </div>
+        {% endif %}
+        {% if p.link %}<a class="project-link" href="{{ p.link }}" target="_blank">Voir le projet →</a>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ Langues + Activités côte à côte ══ -->
+  {% if cv.languages or cv.activities %}
+  <div class="two-equal">
+    {% if cv.languages %}
+    <div class="section">
+      <p class="section-title">Langues</p>
+      {% for lang in cv.languages %}
+      <div class="lang-row">
+        <span>{{ lang.language }}</span>
+        <span class="lang-level">{{ lang.level }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if cv.activities %}
+    <div class="section">
+      <p class="section-title">Activités</p>
+      {% for a in cv.activities %}
+      <div class="entry" style="grid-template-columns:1fr; border-bottom:1px dashed var(--border); padding-bottom:12px; margin-bottom:12px;">
+        <div>
+          <p class="entry-title">{{ a.organisation }}</p>
+          <p class="entry-sub">{{ a.role }}</p>
+          {% if a.activity_missions %}
+          <ul class="mission-list">
+            {% for m in a.activity_missions %}<li>{{ m.description }}</li>{% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+</body>
+</html>

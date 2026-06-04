@@ -469,7 +469,6 @@
                 }
 
                 const { access_token } = await res.json();
-                localStorage.setItem('cv_token', access_token);
                 window.location.href = '/dashboard';
 
             } catch (_) {
@@ -480,17 +479,6 @@
             }
         }
 
-        /* ── Redirect si déjà connecté ── */
-        (async () => {
-            const token = localStorage.getItem('cv_token');
-            if (!token) return;
-            try {
-                const r = await fetch('/users/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (r.ok) window.location.href = '/dashboard';
-            } catch (_) {}
-        })();
     </script>
 </body>
 </html>

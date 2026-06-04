@@ -6,7 +6,7 @@ Routes FastAPI — CRUD SQLAlchemy + rendu Jinja2.
 from datetime import date
 
 from fastapi import FastAPI, HTTPException, Depends, Request, status, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,7 +14,13 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from weasyprint import HTML
 
 from database import get_db
-from auth import hash_password, verify_password, create_access_token, get_current_user
+from auth import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user,
+    get_current_user_from_cookie,
+)
 import models
 import classCV
 from cv_test import cv_test
@@ -64,28 +70,6 @@ def register(user_data: classCV.UserCreate, db: Session = Depends(get_db)):
     return user
 
 
-@app.post("/auth/login", response_model=classCV.Token)
-def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    """
-    Connecte un utilisateur et retourne un token JWT.
-
-    OAuth2PasswordRequestForm attend un body en form-data avec :
-      - username  (= l'email ici, c'est la convention OAuth2)
-      - password
-
-    Le token retourné doit ensuite être envoyé dans le header de chaque requête :
-      Authorization: Bearer <token>
-    """
-    user = db.query(models.User).filter_by(email=form.username).first()
-    if not user or not verify_password(form.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email ou mot de passe incorrect",
-        )
-    token = create_access_token({"sub": str(user.id_user)})
-    return {"access_token": token, "token_type": "bearer"}
-
-
 @app.get("/users/me", response_model=classCV.UserOut)
 def get_me(current_user: models.User = Depends(get_current_user)):
     """
@@ -103,11 +87,9 @@ def get_me(current_user: models.User = Depends(get_current_user)):
 
 
 @app.get("/", response_class=HTMLResponse)
-def accueil(request: Request):
-    """
-    Affiche le CV de test (cv_test.py) avec le template cv.html.
-    Ne touche pas à la BDD — sert uniquement pour tester le rendu HTML.
-    """
+def login_page(request: Request, current_user=Depends(get_current_user_from_cookie)):
+    if current_user:
+        return RedirectResponse(url="/dashboard", status_code=302)
     return templates.TemplateResponse(request=request, name="index.html", context={})
 
 
@@ -538,30 +520,27 @@ def render_cv_html(
     id_cv: int,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),  # BUG CORRIGÉ : manquait
+    current_user: models.User = Depends(get_current_user),
+    template: str = "cv.html",
 ):
-    """
-    Récupère un CV en BDD et le rend avec le template Jinja2 cv.html.
-    BUG CORRIGÉ : cette route n'avait aucune protection — n'importe qui
-    pouvait visualiser le CV HTML de n'importe quel utilisateur.
+    ALLOWED_TEMPLATES = {"cv.html", "cv2.html", "cv3.html", "cv4.html"}
+    if template not in ALLOWED_TEMPLATES:
+        template = "cv.html"
 
-    - Contrairement à GET / qui utilise cv_test.py,
-      cette route lit les vraies données depuis PostgreSQL
-    - Utile pour prévisualiser un CV stocké en BDD
-    """
     db_cv = (
         db.query(models.CV)
         .filter(
             models.CV.id_cv == id_cv,
-            models.CV.id_user == current_user.id_user,  # BUG CORRIGÉ
+            models.CV.id_user == current_user.id_user,
         )
         .first()
     )
     if not db_cv:
         raise HTTPException(status_code=404, detail="CV introuvable")
+
     cv = _db_cv_to_schema(db_cv)
     return templates.TemplateResponse(
-        request=request, name="cv.html", context={"cv": cv}
+        request=request, name=template, context={"cv": cv}
     )
 
 
@@ -664,11 +643,18 @@ def export_cv_to_pdf(
     request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
+    template: str = "cv.html",
 ):
-    # 1. Récupération des données du CV (tu peux réutiliser la logique de ton GET /cv/{id})
+    ALLOWED_TEMPLATES = {"cv.html", "cv2.html", "cv3.html", "cv4.html"}
+    if template not in ALLOWED_TEMPLATES:
+        template = "cv.html"
+
     db_cv = (
         db.query(models.CV)
-        .filter(models.CV.id_cv == id_cv, models.CV.id_user == current_user.id_user)
+        .filter(
+            models.CV.id_cv == id_cv,
+            models.CV.id_user == current_user.id_user,
+        )
         .first()
     )
     if not db_cv:
@@ -676,38 +662,79 @@ def export_cv_to_pdf(
 
     cv_data = _db_cv_to_schema(db_cv)
 
-    # 2. Rendu du template HTML (utilise le même template que pour l'affichage écran)
-    # Assure-toi que "cv_template.html" existe bien dans ton dossier templates/
     html_content = templates.TemplateResponse(
-        request=request, name="cv.html", context={"cv": cv_data}
+        request=request, name=template, context={"cv": cv_data}
     ).body.decode("utf-8")
 
-    # 3. Conversion en PDF avec WeasyPrint
-    # base_url est crucial pour que le CSS et les images soient chargés
     pdf_file = HTML(string=html_content, base_url=str(request.base_url)).write_pdf()
 
-    # 4. Envoi du fichier
+    filename = (
+        f"cv_{cv_data.personnal_information.name}_{template.replace('.html', '')}.pdf"
+    )
+
     return Response(
         content=pdf_file,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename=cv_{cv_data.personnal_information.name}.pdf"
-        },
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
-@app.get("/login", response_class=HTMLResponse)
-def login_page(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={})
+# ── Login : pose le cookie en plus de retourner le token ──
+@app.post("/auth/login", response_model=classCV.Token)
+def login(
+    response: Response,
+    form: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    user = db.query(models.User).filter_by(email=form.username).first()
+    if not user or not verify_password(form.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email ou mot de passe incorrect",
+        )
+    token = create_access_token({"sub": str(user.id_user)})
+    response.set_cookie(
+        key="cv_token",
+        value=token,
+        httponly=False,
+        max_age=60 * 60 * 24,
+        samesite="lax",
+    )
+    return {"access_token": token, "token_type": "bearer"}
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard_page(request: Request):
+def dashboard_page(
+    request: Request, current_user=Depends(get_current_user_from_cookie)
+):
+    if not current_user:
+        return RedirectResponse(url="/", status_code=302)
     return templates.TemplateResponse(
         request=request, name="dashboard.html", context={}
     )
 
 
 @app.get("/create", response_class=HTMLResponse)
-def create_page(request: Request):
+def create_page(request: Request, current_user=Depends(get_current_user_from_cookie)):
+    if not current_user:
+        return RedirectResponse(url="/", status_code=302)
     return templates.TemplateResponse(request=request, name="create.html", context={})
+
+
+@app.get("/cv/{id_cv}/preview", response_class=HTMLResponse)
+def preview_page(
+    id_cv: int, request: Request, current_user=Depends(get_current_user_from_cookie)
+):
+    if not current_user:
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse(
+        request=request, name="preview.html", context={"cv_id": id_cv}
+    )
+
+
+# ── Logout ──
+@app.get("/logout")
+def logout():
+    response = RedirectResponse(url="/", status_code=302)
+    response.delete_cookie("cv_token")
+    return response

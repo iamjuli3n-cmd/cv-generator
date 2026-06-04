@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>{{ cv.personnal_information.first_name }} {{ cv.personnal_information.name }} — CV</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Figtree:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --dark:    #0f1923;
+      --dark2:   #1a2636;
+      --cyan:    #00c2a8;
+      --cyan-lt: rgba(0,194,168,.12);
+      --bg:      #f4f6f8;
+      --surface: #ffffff;
+      --text:    #1a2636;
+      --muted:   #5a6a7e;
+      --border:  #dde2ea;
+      --display: 'Syne', system-ui, sans-serif;
+      --body:    'Figtree', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--body);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* ── Wrapper ── */
+    .page {
+      max-width: 920px;
+      margin: 40px auto;
+      background: var(--surface);
+      box-shadow: 0 4px 40px rgba(0,0,0,0.09);
+    }
+
+    /* ── Top header band ── */
+    .cv-header {
+      background: var(--dark);
+      padding: 44px 52px 38px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+    }
+
+    .header-identity {}
+
+    .header-tag {
+      font-family: var(--display);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 10px;
+    }
+
+    .header-name {
+      font-family: var(--display);
+      font-size: 42px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.0;
+      letter-spacing: -0.01em;
+      margin-bottom: 10px;
+    }
+
+    .header-title {
+      font-family: var(--body);
+      font-size: 13.5px;
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(255,255,255,.55);
+      letter-spacing: 0.02em;
+    }
+
+    .header-contact {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      align-items: flex-end;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: rgba(255,255,255,.65);
+    }
+
+    .contact-label {
+      font-family: var(--display);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      min-width: 64px;
+      text-align: right;
+    }
+
+    /* ── Résumé strip ── */
+    .cv-resume-strip {
+      background: var(--dark2);
+      padding: 18px 52px;
+      font-size: 13px;
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(255,255,255,.55);
+      line-height: 1.75;
+      border-left: 3px solid var(--cyan);
+    }
+
+    /* ── Body layout ── */
+    .cv-body {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+    }
+
+    /* ── Main column ── */
+    .col-main {
+      padding: 40px 40px 40px 52px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 34px;
+    }
+
+    /* ── Side column ── */
+    .col-side {
+      padding: 40px 36px 40px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    /* ── Section title ── */
+    .section-title {
+      font-family: var(--display);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Entry (expériences / formations) ── */
+    .entry {
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+    .entry::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 5px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+    }
+
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 3px;
+    }
+
+    .entry-title {
+      font-family: var(--display);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .entry-date {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      background: var(--bg);
+      padding: 2px 9px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .entry-sub {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-bottom: 9px;
+      font-style: italic;
+    }
+
+    .mission-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .mission-list li {
+      font-size: 12.5px;
+      color: var(--muted);
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .mission-list li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--cyan);
+      font-size: 9px;
+      top: 2px;
+    }
+
+    /* ── Projets ── */
+    .project-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-card:last-child { margin-bottom: 0; }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--cyan);
+    }
+
+    .project-name {
+      font-family: var(--display);
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 5px;
+      color: var(--text);
+    }
+
+    .project-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .project-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 7px;
+    }
+
+    .project-tag {
+      font-size: 10px;
+      font-family: var(--display);
+      font-weight: 600;
+      background: var(--cyan-lt);
+      color: #007a6d;
+      padding: 2px 8px;
+      border-radius: 3px;
+      letter-spacing: 0.04em;
+    }
+
+    .project-link {
+      font-size: 11.5px;
+      color: var(--cyan);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* ── Side: Langues ── */
+    .lang-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .lang-item:last-child { border-bottom: none; }
+
+    .lang-name { font-weight: 500; }
+
+    .lang-level {
+      font-size: 11px;
+      background: var(--cyan-lt);
+      color: #007a6d;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-family: var(--display);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Side: Activités ── */
+    .activity-item {
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .activity-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+    .activity-org {
+      font-family: var(--display);
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .activity-role {
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+
+    .activity-missions {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .activity-missions li {
+      font-size: 12px;
+      color: var(--muted);
+      padding-left: 12px;
+      position: relative;
+    }
+
+    .activity-missions li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--cyan);
+      font-size: 9px;
+      top: 2px;
+    }
+
+    @media print {
+      body { background: white; }
+      .page { box-shadow: none; margin: 0; max-width: 100%; }
+      @page { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══ Header band ══ -->
+  <header class="cv-header">
+    <div class="header-identity">
+      <p class="header-tag">Curriculum Vitæ</p>
+      <h1 class="header-name">
+        {{ cv.personnal_information.first_name }}<br>{{ cv.personnal_information.name }}
+      </h1>
+      <p class="header-title">{{ cv.titre_profil }}</p>
+    </div>
+    <div class="header-contact">
+      <div class="contact-item">
+        <span class="contact-label">Email</span>
+        <span>{{ cv.personnal_information.email }}</span>
+      </div>
+      <div class="contact-item">
+        <span class="contact-label">Tél.</span>
+        <span>{{ cv.personnal_information.phone_number }}</span>
+      </div>
+      <div class="contact-item">
+        <span class="contact-label">Adresse</span>
+        <span>{{ cv.personnal_information.address }}</span>
+      </div>
+      {% if cv.personnal_information.linkedin %}
+      <div class="contact-item">
+        <span class="contact-label">LinkedIn</span>
+        <span>{{ cv.personnal_information.linkedin }}</span>
+      </div>
+      {% endif %}
+      {% if cv.personnal_information.github %}
+      <div class="contact-item">
+        <span class="contact-label">GitHub</span>
+        <span>{{ cv.personnal_information.github }}</span>
+      </div>
+      {% endif %}
+      {% if cv.personnal_information.portfoliio %}
+      <div class="contact-item">
+        <span class="contact-label">Portfolio</span>
+        <span>{{ cv.personnal_information.portfoliio }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ══ Résumé strip ══ -->
+  <div class="cv-resume-strip">{{ cv.resume }}</div>
+
+  <!-- ══ Body ══ -->
+  <div class="cv-body">
+
+    <!-- Colonne principale -->
+    <div class="col-main">
+
+      <!-- Expériences -->
+      {% if cv.experiences %}
+      <div class="section">
+        <p class="section-title">Expériences</p>
+        {% for exp in cv.experiences %}
+        <div class="entry">
+          <div class="entry-header">
+            <span class="entry-title">{{ exp.job }}</span>
+            <span class="entry-date">{{ exp.start_date }} → {{ exp.end_date if exp.end_date else "Présent" }}</span>
+          </div>
+          <p class="entry-sub">{{ exp.company }} · {{ exp.city }}</p>
+          {% if exp.missions %}
+          <ul class="mission-list">
+            {% for m in exp.missions %}<li>{{ m.description }}</li>{% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Formations -->
+      {% if cv.formations %}
+      <div class="section">
+        <p class="section-title">Formation</p>
+        {% for f in cv.formations %}
+        <div class="entry">
+          <div class="entry-header">
+            <span class="entry-title">{{ f.diploma }}</span>
+            <span class="entry-date">{{ f.date }}</span>
+          </div>
+          <p class="entry-sub">{{ f.school }} · {{ f.city }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Projets -->
+      {% if cv.projects %}
+      <div class="section">
+        <p class="section-title">Projets</p>
+        {% for p in cv.projects %}
+        <div class="project-card">
+          <p class="project-name">{{ p.name }}</p>
+          <p class="project-desc">{{ p.description }}</p>
+          {% if p.technologies %}
+          <div class="project-tags">
+            {% for t in p.technologies %}<span class="project-tag">{{ t.name }}</span>{% endfor %}
+          </div>
+          {% endif %}
+          {% if p.link %}<a class="project-link" href="{{ p.link }}" target="_blank">↗ Voir le projet</a>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Colonne latérale -->
+    <div class="col-side">
+
+      <!-- Langues -->
+      {% if cv.languages %}
+      <div class="section">
+        <p class="section-title">Langues</p>
+        {% for lang in cv.languages %}
+        <div class="lang-item">
+          <span class="lang-name">{{ lang.language }}</span>
+          <span class="lang-level">{{ lang.level }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Activités -->
+      {% if cv.activities %}
+      <div class="section">
+        <p class="section-title">Activités</p>
+        {% for a in cv.activities %}
+        <div class="activity-item">
+          <p class="activity-org">{{ a.organisation }}</p>
+          <p class="activity-role">{{ a.role }}</p>
+          {% if a.activity_missions %}
+          <ul class="activity-missions">
+            {% for m in a.activity_missions %}<li>{{ m.description }}</li>{% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Technologies (issues des projets) -->
+      {% set all_techs = [] %}
+      {% for project in cv.projects %}
+        {% for tech in project.technologies %}
+          {% if tech.name not in all_techs %}
+            {% set _ = all_techs.append(tech.name) %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+      {% if all_techs %}
+      <div class="section">
+        <p class="section-title">Stack</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          {% for tech in all_techs %}
+          <span class="project-tag">{{ tech }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

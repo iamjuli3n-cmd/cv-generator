@@ -519,8 +519,11 @@
         let expCount = 0, formCount = 0, projCount = 0, langCount = 0, actCount = 0;
 
         /* ─── Auth guard ─────────────────────────────────────── */
-        const token = localStorage.getItem('cv_token');
-        if (!token) window.location.href = '/';
+        function getToken() {
+            const m = document.cookie.match(/(?:^|;\s*)cv_token=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : null;
+        }
+        const token = getToken();
 
         /* ─── Mode édition ──────────────────────────────────── */
         const urlParams = new URLSearchParams(window.location.search);
