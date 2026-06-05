@@ -423,9 +423,9 @@ Vérifiez que la route `POST /auth/login` dans `main.py` a bien le paramètre `r
 - [x] Authentification utilisateur
 - [x] Tableau de bord de gestion
 - [x] Prévisualisation interactive multi-templates
-- [ ] Partage de CVs avec lien unique
 - [ ] Import depuis LinkedIn
 - [ ] Tests automatisés (pytest)
+- [ ] Suggestion forme et template suivant offre d'emploi 
 
 ---
 
