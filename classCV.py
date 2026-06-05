@@ -7,6 +7,10 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 from pydantic import BaseModel, EmailStr, HttpUrl
+from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from datetime import datetime
+from sqlalchemy import DateTime
 
 
 class PersonnalInformation(BaseModel):
@@ -103,3 +107,4 @@ class UserOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+

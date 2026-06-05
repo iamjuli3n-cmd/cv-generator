@@ -1,19 +1,20 @@
-"""
-main.py
-Routes FastAPI — CRUD SQLAlchemy + rendu Jinja2.
-"""
+from datetime import date, datetime
+import json
 
-from datetime import date
-
-from fastapi import FastAPI, HTTPException, Depends, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Depends, Request, status, Form
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session, joinedload, selectinload
 
-from database import get_db
+from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+
+from database import get_db, engine, Base
 from auth import hash_password, verify_password, create_access_token, get_current_user
+
+
+
 import models
 import classCV
 from cv_test import cv_test
@@ -21,20 +22,323 @@ from cv_test import cv_test
 app = FastAPI(title="CV Generator")
 templates = Jinja2Templates(directory="templates")
 
-# ═══════════════════════════════════════════════════════════════════════
-#  CORS
-#  BUG CORRIGÉ : allow_origins=["*"] + allow_credentials=True est une
-#  combinaison invalide — les navigateurs la rejettent silencieusement.
-#  En dev on désactive les credentials, en prod on met le vrai domaine.
-# ═══════════════════════════════════════════════════════════════════════
+class LoginUser(Base):
+    __tablename__ = "login_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False)
+    password = Column(String, nullable=False)
+
+
+class SavedCV(Base):
+    __tablename__ = "saved_cvs"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    title = Column(String)
+    titre_profil = Column(String)
+    resume = Column(Text)
+
+    full_name = Column(String)
+    email = Column(String)
+    phone = Column(String)
+
+    data_json = Column(Text)
+
+    user_id = Column(Integer, ForeignKey("login_users.id"))
+
+    date_creation = Column(DateTime, default=datetime.utcnow)
+    date_modification = Column(DateTime, default=datetime.utcnow)
+
+
+Base.metadata.create_all(bind=engine)
+
+Base.metadata.create_all(
+    bind=engine
+)
+
+@app.get("/")
+def root():
+    return RedirectResponse("/connection")
+
+
+@app.get("/connection")
+def connection_page(request: Request):
+
+    return templates.TemplateResponse(
+        request=request,
+        name="connection.html",
+        context={
+            "request": request
+        }
+    )
+
+@app.post("/login")
+def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+
+    user = db.query(LoginUser).filter(
+        LoginUser.username == username
+    ).first()
+
+    if user is None:
+
+        user = LoginUser(
+            username=username,
+            password=password
+        )
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    elif user.password != password:
+
+        return templates.TemplateResponse(
+            request=request,
+            name="connection.html",
+            context={
+                "error": "Wrong password"
+            }
+        )
+
+    return RedirectResponse(
+        f"/accueil/{user.id}",
+        status_code=303
+    )
+
+@app.get("/accueil")
+@app.get("/accueil/")
+def accueil_without_id():
+    return RedirectResponse(
+        url="/",
+        status_code=303
+    )
+
+
+@app.get("/accueil/{user_id}")
+def accueil(
+    request: Request,
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+
+    user = db.query(LoginUser).filter(
+        LoginUser.id == user_id
+    ).first()
+
+    cvs = db.query(SavedCV).filter(
+        SavedCV.user_id == user_id
+    ).all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="accueil.html",
+        context={
+            "user": user,
+            "cvs": cvs
+        }
+    )
+
+
+@app.get("/index/{user_id}")
+def index_page(
+    request: Request,
+    user_id: int
+):
+
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "user_id": user_id
+        }
+    )
+
+@app.post("/save_cv/{user_id}")
+async def save_cv(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+
+    data = await request.json()
+
+    cv_count = db.query(SavedCV).filter(
+        SavedCV.user_id == user_id
+    ).count()
+
+    personal = data.get(
+        "personnal_information",
+        {}
+    )
+
+    cv = SavedCV(
+
+        title=f"CV{cv_count+1}",
+
+        titre_profil=data.get(
+            "titre_profil",
+            ""
+        ),
+
+        resume=data.get(
+            "resume",
+            ""
+        ),
+
+        full_name=
+        personal.get(
+            "first_name",
+            ""
+        ) + " " +
+        personal.get(
+            "name",
+            ""
+        ),
+
+        email=personal.get(
+            "email",
+            ""
+        ),
+
+        phone=personal.get(
+            "phone_number",
+            ""
+        ),
+
+        data_json=json.dumps(
+            data,
+            ensure_ascii=False
+        ),
+
+        user_id=user_id
+    )
+
+    db.add(cv)
+
+    db.commit()
+
+    return JSONResponse(
+        {
+            "success": True
+        }
+    )
+
+
+@app.get("/logout")
+def logout():
+    return RedirectResponse(
+        url="/",
+        status_code=303
+    )
+
+
+@app.get("/accueil/{user_id}/cv/{cv_id}", response_class=HTMLResponse)
+def view_saved_cv(
+    request: Request,
+    user_id: int,
+    cv_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Affiche le CV sauvegardé (SavedCV) en HTML en lisant son data_json.
+    Passe le dict brut au template pour éviter les erreurs de validation Pydantic
+    sur des champs vides ou malformés (email vide, dates vides, etc.).
+    """
+    cv_record = db.query(SavedCV).filter(
+        SavedCV.id == cv_id,
+        SavedCV.user_id == user_id
+    ).first()
+
+    if not cv_record:
+        raise HTTPException(status_code=404, detail="CV introuvable")
+
+    try:
+        cv_data = json.loads(cv_record.data_json)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Données du CV invalides")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="cv.html",
+        context={"cv": cv_data, "back_url": f"/accueil/{user_id}"}
+    )
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Remplace par ["http://ton-domaine.com"] en prod
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_credentials=False,  # BUG CORRIGÉ : False obligatoire avec allow_origins=["*"]
+    allow_credentials=False
 )
+
+
+# -------------------------
+# SAVE CV
+# -------------------------
+
+# @app.post("/save_cv/{user_id}")
+# def save_cv(
+
+#     user_id: int,
+
+#     full_name: str = Form(...),
+
+#     email: str = Form(...),
+
+#     phone: str = Form(...),
+
+#     education: str = Form(...),
+
+#     experience: str = Form(...),
+
+#     skills: str = Form(...),
+
+#     db: Session = Depends(get_db)
+
+# ):
+
+#     number_cv = db.query(CV).filter(
+#         CV.user_id == user_id
+#     ).count()
+
+#     cv = CV(
+
+#         title=f"CV{number_cv+1}",
+
+#         full_name=full_name,
+
+#         email=email,
+
+#         phone=phone,
+
+#         education=education,
+
+#         experience=experience,
+
+#         skills=skills,
+
+#         user_id=user_id
+
+#     )
+# #
+#     db.add(cv)
+
+#     db.commit()
+
+#     return RedirectResponse(
+
+#         f"/accueil/{user_id}",
+
+#         status_code=303
+
+#     )
 
 
 # ══════════════════════════════════════════
@@ -101,15 +405,15 @@ def get_me(current_user: models.User = Depends(get_current_user)):
 # ══════════════════════════════════════════
 
 
-@app.get("/", response_class=HTMLResponse)
-def accueil(request: Request):
-    """
-    Affiche le CV de test (cv_test.py) avec le template cv.html.
-    Ne touche pas à la BDD — sert uniquement pour tester le rendu HTML.
-    """
-    return templates.TemplateResponse(
-        request=request, name="cv.html", context={"cv": cv_test}
-    )
+#@app.get("/", response_class=HTMLResponse)
+#def accueil(request: Request):
+#    """
+#    Affiche le CV de test (cv_test.py) avec le template cv.html.
+#    Ne touche pas à la BDD — sert uniquement pour tester le rendu HTML.
+#    """
+#    return templates.TemplateResponse(
+#        request=request, name="cv.html", context={"cv": cv_test}
+#    )
 
 
 @app.get("/cv2", response_class=HTMLResponse)
