@@ -5,11 +5,14 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./cv_generator.db")
+
+# SQLite needs check_same_thread=False for FastAPI's threaded request handling
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 engine = create_engine(
-    DATABASE_URL
-)  # Le engine c'est le "tuyau" entre ton code Python et PostgreSQL.
+    DATABASE_URL, connect_args=connect_args
+)  # Le engine c'est le "tuyau" entre ton code Python et la BDD.
 
 # Une session c'est une "conversation" avec la BDD — tu ouvres une session, tu fais tes requêtes, tu fermes. C'est comme ouvrir et fermer une connexion à chaque fois que tu en as besoin.
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)

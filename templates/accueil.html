@@ -1,357 +1,131 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
     <title>Accueil</title>
 
-<style>
-
-*{
-    box-sizing:border-box;
-}
-
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#f3f4f6;
-}
-
-/* ===== TOP BAR ===== */
-
-.top{
-
-    width:100%;
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    padding:20px 4%;
-
-    background:white;
-
-    box-shadow:0 2px 8px rgba(0,0,0,.1);
-
-}
-
-.connection,
-.logout-btn{
-
-    width:120px;
-
-    height:46px;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    border-radius:10px;
-
-    font-size:16px;
-
-    font-weight:600;
-
-}
-
-/* connection */
-
-.connection{
-
-    background:#2563eb;
-
-    color:white;
-
-    text-decoration:none;
-
-}
-
-/* logout */
-
-.logout-btn{
-
-    background:#dc2626;
-
-    color:white;
-
-    border:none;
-
-    cursor:pointer;
-
-}
-
-/* hover */
-
-.connection:hover{
-
-    background:#1d4ed8;
-
-}
-
-.logout-btn:hover{
-
-    background:#b91c1c;
-
-}
-
-/* ===== CONTAINER ===== */
-
-.container{
-
-    width:min(1100px,90vw);
-
-    margin:40px auto;
-
-}
-
-/* ===== CARD ===== */
-
-.card{
-
-    background:white;
-
-    border-radius:12px;
-
-    padding:25px;
-
-    margin-bottom:20px;
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    gap:20px;
-
-    box-shadow:0 1px 5px rgba(0,0,0,.05);
-
-}
-
-.info{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:8px;
-
-}
-
-.info strong{
-
-    font-size:24px;
-
-}
-
-.info span{
-
-    font-size:18px;
-
-    color:#555;
-
-}
-
-/* ===== BUTTON AREA ===== */
-
-.actions{
-
-    display:flex;
-
-    gap:12px;
-
-}
-
-/* same size */
-
-.actions button{
-
-    width:120px;
-
-    height:42px;
-
-    border:none;
-
-    border-radius:8px;
-
-    cursor:pointer;
-
-    color:white;
-
-    font-size:14px;
-
-    font-weight:600;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-}
-
-/* confirm */
-
-.confirm{
-
-    background:#16a34a;
-
-}
-
-.confirm:hover{
-
-    background:#15803d;
-
-}
-
-/* modify */
-
-.modify{
-
-    background:#f59e0b;
-
-}
-
-.modify:hover{
-
-    background:#d97706;
-
-}
-
-/* ===== MOBILE ===== */
-
-@media(max-width:700px){
-
-.top{
-
-    flex-direction:column;
-
-    gap:15px;
-
-}
-
-.card{
-
-    flex-direction:column;
-
-    align-items:flex-start;
-
-}
-
-.actions{
-
-    width:100%;
-
-    flex-direction:column;
-
-}
-
-.actions form{
-
-    width:100%;
-
-}
-
-.actions button{
-
-    width:100%;
-
-}
-
-}
-
-</style>
-
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+        }
+
+        .top-bar {
+            height: 60px;
+            background: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .username {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .exit {
+            text-decoration: none;
+            color: white;
+            background: #ef4444;
+            padding: 10px 18px;
+            border-radius: 8px;
+        }
+
+        .container {
+            padding: 40px;
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .add-card {
+            width: 180px;
+            height: 230px;
+            background: white;
+            border: 2px dashed #9ca3af;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 70px;
+            color: #6b7280;
+            text-decoration: none;
+        }
+
+        .add-card:hover {
+            background: #e5e7eb;
+        }
+
+        .cv-card {
+            width: 180px;
+            height: 230px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .cv-card h3 {
+            margin-top: 0;
+            color: #2563eb;
+        }
+
+        .cv-card p {
+            font-size: 14px;
+            color: #374151;
+            word-break: break-word;
+        }
+
+        .cv-card-link {
+            text-decoration: none;
+            display: block;
+            border-radius: 15px;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .cv-card-link:hover .cv-card {
+            box-shadow: 0 8px 24px rgba(37,99,235,0.18);
+            border: 2px solid #2563eb;
+        }
+
+        .cv-card-link:hover {
+            transform: translateY(-4px);
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="top">
+    <div class="top-bar">
+        <div class="username">
+            {{ user.username }}
+        </div>
 
-<div class="connection">
+        <a class="exit" href="/connection">Exit</a>
+    </div>
 
-{{ username }}
+    <div class="container">
 
-</div>
+        <a class="add-card" href="/index/{{ user.id }}">
+            +
+        </a>
 
-<button
-class="logout-btn"
-onclick="window.location='/logout'">
+        {% for cv in cvs %}
+        <a class="cv-card-link" href="/accueil/{{ user.id }}/cv/{{ cv.id }}">
+            <div class="cv-card">
+                <h3>{{ cv.title }}</h3>
+                <p><strong>Name:</strong> {{ cv.full_name }}</p>
+                <p><strong>Email:</strong> {{ cv.email }}</p>
+                <p><strong>Phone:</strong> {{ cv.phone }}</p>
+            </div>
+        </a>
+        {% endfor %}
 
-Exit
-
-</button>
-
-</div>
-
-
-<div class="container">
-
-{% for item in items %}
-
-<div class="card">
-
-<div class="info">
-
-<strong>
-
-{{ item.name }}
-
-</strong>
-
-<span>
-
-{{ item.status }}
-
-</span>
-
-</div>
-
-
-<div class="actions">
-
-<form method="post"
-action="/confirm/{{ item.id }}">
-
-<button
-class="confirm"
-type="submit">
-
-✓ Confirm
-
-</button>
-
-</form>
-
-
-<form method="post"
-action="/modify/{{ item.id }}">
-
-<button
-class="modify"
-type="submit">
-
-Modify
-
-</button>
-
-</form>
-
-</div>
-
-</div>
-
-{% endfor %}
-
-</div>
+    </div>
 
 </body>
-
 </html>
