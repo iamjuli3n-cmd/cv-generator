@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Accueil</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f3f4f6;
+}
+
+/* ===== TOP BAR ===== */
+
+.top{
+
+    width:100%;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:20px 4%;
+
+    background:white;
+
+    box-shadow:0 2px 8px rgba(0,0,0,.1);
+
+}
+
+.connection,
+.logout-btn{
+
+    width:120px;
+
+    height:46px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    border-radius:10px;
+
+    font-size:16px;
+
+    font-weight:600;
+
+}
+
+/* connection */
+
+.connection{
+
+    background:#2563eb;
+
+    color:white;
+
+    text-decoration:none;
+
+}
+
+/* logout */
+
+.logout-btn{
+
+    background:#dc2626;
+
+    color:white;
+
+    border:none;
+
+    cursor:pointer;
+
+}
+
+/* hover */
+
+.connection:hover{
+
+    background:#1d4ed8;
+
+}
+
+.logout-btn:hover{
+
+    background:#b91c1c;
+
+}
+
+/* ===== CONTAINER ===== */
+
+.container{
+
+    width:min(1100px,90vw);
+
+    margin:40px auto;
+
+}
+
+/* ===== CARD ===== */
+
+.card{
+
+    background:white;
+
+    border-radius:12px;
+
+    padding:25px;
+
+    margin-bottom:20px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:20px;
+
+    box-shadow:0 1px 5px rgba(0,0,0,.05);
+
+}
+
+.info{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+}
+
+.info strong{
+
+    font-size:24px;
+
+}
+
+.info span{
+
+    font-size:18px;
+
+    color:#555;
+
+}
+
+/* ===== BUTTON AREA ===== */
+
+.actions{
+
+    display:flex;
+
+    gap:12px;
+
+}
+
+/* same size */
+
+.actions button{
+
+    width:120px;
+
+    height:42px;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    color:white;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+/* confirm */
+
+.confirm{
+
+    background:#16a34a;
+
+}
+
+.confirm:hover{
+
+    background:#15803d;
+
+}
+
+/* modify */
+
+.modify{
+
+    background:#f59e0b;
+
+}
+
+.modify:hover{
+
+    background:#d97706;
+
+}
+
+/* ===== MOBILE ===== */
+
+@media(max-width:700px){
+
+.top{
+
+    flex-direction:column;
+
+    gap:15px;
+
+}
+
+.card{
+
+    flex-direction:column;
+
+    align-items:flex-start;
+
+}
+
+.actions{
+
+    width:100%;
+
+    flex-direction:column;
+
+}
+
+.actions form{
+
+    width:100%;
+
+}
+
+.actions button{
+
+    width:100%;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="top">
+
+<div class="connection">
+
+{{ username }}
+
+</div>
+
+<button
+class="logout-btn"
+onclick="window.location='/logout'">
+
+Exit
+
+</button>
+
+</div>
+
+
+<div class="container">
+
+{% for item in items %}
+
+<div class="card">
+
+<div class="info">
+
+<strong>
+
+{{ item.name }}
+
+</strong>
+
+<span>
+
+{{ item.status }}
+
+</span>
+
+</div>
+
+
+<div class="actions">
+
+<form method="post"
+action="/confirm/{{ item.id }}">
+
+<button
+class="confirm"
+type="submit">
+
+✓ Confirm
+
+</button>
+
+</form>
+
+
+<form method="post"
+action="/modify/{{ item.id }}">
+
+<button
+class="modify"
+type="submit">
+
+Modify
+
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</body>
+
+</html>

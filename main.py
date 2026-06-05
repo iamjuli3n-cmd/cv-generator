@@ -5,6 +5,7 @@ Routes FastAPI — CRUD SQLAlchemy + rendu Jinja2.
 
 from datetime import date
 
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import FastAPI, HTTPException, Depends, Request, status
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -27,6 +28,40 @@ templates = Jinja2Templates(directory="templates")
 #  combinaison invalide — les navigateurs la rejettent silencieusement.
 #  En dev on désactive les credentials, en prod on met le vrai domaine.
 # ═══════════════════════════════════════════════════════════════════════
+
+
+@app.get("/", response_class=HTMLResponse)
+def root(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="connection.html",
+        context={}
+    )
+
+@app.get("/connection", response_class=HTMLResponse)
+def connection_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="connection.html",
+        context={}
+    )
+
+@app.get("/accueil", response_class=HTMLResponse)
+def accueil_page(request: Request):
+
+    fake_items = [
+        {"id":1, "name":"CV 1", "status":"Ready"},
+        {"id":2, "name":"CV 2", "status":"Pending"},
+    ]
+
+    return templates.TemplateResponse(
+        request=request,
+        name="accueil.html",
+        context={
+            "username":"User",
+            "items":fake_items
+        }
+    )
 
 app.add_middleware(
     CORSMiddleware,
@@ -101,15 +136,15 @@ def get_me(current_user: models.User = Depends(get_current_user)):
 # ══════════════════════════════════════════
 
 
-@app.get("/", response_class=HTMLResponse)
-def accueil(request: Request):
-    """
-    Affiche le CV de test (cv_test.py) avec le template cv.html.
-    Ne touche pas à la BDD — sert uniquement pour tester le rendu HTML.
-    """
-    return templates.TemplateResponse(
-        request=request, name="cv.html", context={"cv": cv_test}
-    )
+#@app.get("/", response_class=HTMLResponse)
+#def accueil(request: Request):
+#    """
+#    Affiche le CV de test (cv_test.py) avec le template cv.html.
+#    Ne touche pas à la BDD — sert uniquement pour tester le rendu HTML.
+#    """
+#    return templates.TemplateResponse(
+#        request=request, name="cv.html", context={"cv": cv_test}
+#    )
 
 
 @app.get("/cv2", response_class=HTMLResponse)
