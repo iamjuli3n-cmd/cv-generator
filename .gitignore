@@ -3,3 +3,6 @@
 .env
 /venv
 *.pyc
+.pytest_cache
+.coverage
+htmlcov/

@@ -4,9 +4,10 @@ Crée toutes les tables dans PostgreSQL.
 Lance ce fichier UNE seule fois.
 """
 
-from database import engine, Base
+from database import get_engine, Base
 import models  # noqa: F401 — importer les modèles pour que Base les connaisse
 
+engine = get_engine()
 Base.metadata.drop_all(bind=engine)  # supprime toutes les tables
 Base.metadata.create_all(
     bind=engine
