@@ -136,7 +136,7 @@ def get_cv_test_json():
 # ══════════════════════════════════════════
 
 
-@app.post("/cv", response_model=classCV.CV)
+@app.post("/cv", response_model=classCV.CV, status_code=201)
 def create_cv(
     cv_data: classCV.CV,
     db: Session = Depends(get_db),
